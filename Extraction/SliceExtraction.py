@@ -43,7 +43,7 @@ img_max = wl + ww / 2
 
 
 def extractAllSlices(dicomdir_list, wl, ww):
-    for dicomdir in dicomdir_list[77:]:
+    for dicomdir in dicomdir_list:
         # dicomdir = dicomdir_list[77]
         try:
             ds = pydicom.read_file(dicomdir)

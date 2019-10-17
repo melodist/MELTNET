@@ -14,23 +14,15 @@
 
 # Extract Patches from images
 import os
-import glob
 import numpy as np
 import cv2
-
-# Initialize Parameters
-path = './PET-CT Images/00006347 KIM SE HO'
-
-# Initialize Array
-ind_CT = [[230, 380], [150, 370]]
-ind_PT = [[66, 106], [43, 103]]
 
 
 # Extract path
 def stackImages(path, ind_ct, ind_pt):
-    img_ct = np.zeros((ind_ct[0][1] - ind_ct[0][0],
+    img_ct = np.zeros((1, ind_ct[0][1] - ind_ct[0][0],
                        ind_ct[1][1] - ind_ct[1][0]))
-    img_pt = np.zeros((ind_ct[0][1] - ind_ct[0][0],
+    img_pt = np.zeros((1, ind_ct[0][1] - ind_ct[0][0],
                        ind_ct[1][1] - ind_ct[1][0]))
     for root, dirs, files in os.walk(path):
         for file in files:
@@ -40,17 +32,20 @@ def stackImages(path, ind_ct, ind_pt):
             if 'CT' in modality:
                 img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
                 # Apply windows
-                img_win = img[ind_ct[0][0]:ind_ct[0][1],ind_ct[1][0]:ind_ct[1][1]]
-                img_ct = np.dstack((img_ct, img_win))
+                img_win = img[ind_ct[0][0]:ind_ct[0][1], ind_ct[1][0]:ind_ct[1][1]]
+                img_ct = np.vstack([img_ct, img_win[np.newaxis, :, :]])
             else:
                 img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+                # Apply windows
                 img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_CUBIC)
-                img_win = img[ind_ct[0][0]:ind_ct[0][1],ind_ct[1][0]:ind_ct[1][1]]
-                img_pt = np.dstack((img_pt, img_win))
+                img_win = img[ind_ct[0][0]:ind_ct[0][1], ind_ct[1][0]:ind_ct[1][1]]
+                img_pt = np.vstack([img_pt, img_win[np.newaxis, :, :]])
 
-    img_ct = np.delete(img_ct, 0, 2)
-    img_pt = np.delete(img_pt, 0, 2)
+    img_ct = np.delete(img_ct, 0, 0)
+    img_pt = np.delete(img_pt, 0, 0)
+    img_ct = img_ct[:, :, :, np.newaxis]
+    img_pt = img_pt[:, :, :, np.newaxis]
     print(f'img_ct.shape: {img_ct.shape}')
-    print(f'img_PT.shape: {img_pt.shape}')
+    print(f'img_pt.shape: {img_pt.shape}')
 
     return img_ct, img_pt
