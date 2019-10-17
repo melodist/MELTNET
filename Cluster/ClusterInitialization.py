@@ -3,12 +3,14 @@
 
 """
 import numpy as np
+import ExecutionTime
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial import distance
 
 
-class clusters:
+class Clusters:
     def __init__(self, samples, **kwargs):
+        print(f"Initialize Clusters...")
         self.samples = samples
         self.n_clusters = -1
 
@@ -28,9 +30,12 @@ class clusters:
             self.a = 1
 
         self.labels = cluster_initialize(self.samples, self.K_0)
-        self.w = calculate_weights(self, self.a)
+        print(f"Calculate weights for all samples...")
+        self.w = calculate_weights(self.samples, self.K_s, self.a)
 
+        print(f"Cluster Initialization Completed!")
 
+@ExecutionTime.execution_time
 def cluster_initialize(samples, K_0):
     """
 
@@ -71,6 +76,7 @@ def dfs(labels, graph, start, index):
     return labels
 
 
+@ExecutionTime.execution_time
 def calculate_weights(samples, K_s, a):
     """
     Generate Weight Matrix of samples
@@ -88,7 +94,7 @@ def calculate_weights(samples, K_s, a):
     w = np.zeros((n_samples, n_samples))
 
     # Calculate sigma_square
-    clf_aff = NearestNeighbors(n_neighbors= K_s)
+    clf_aff = NearestNeighbors(n_neighbors=K_s)
     clf_aff.fit(samples)
     knn_dist, knn_ind = clf_aff.kneighbors()
     dsts = np.sum(knn_dist)
