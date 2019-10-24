@@ -10,10 +10,10 @@ from scipy.spatial import distance
 
 
 class Clusters:
-    def __init__(self, samples, **kwargs):
+    def __init__(self, samples, n_c_star, **kwargs):
         print(f"Initialize Clusters...")
         self.samples = samples
-        self.n_clusters = -1
+        self.n_c_star = n_c_star
 
         if "K_s" in kwargs:
             self.K_s = kwargs["K_s"]
@@ -36,15 +36,21 @@ class Clusters:
             self.a = 1
 
         self.labels = cluster_initialize(self.samples, self.K_0)
+        self.n_clusters = np.unique(self.labels).shape[0]
+        print(f"Number of Initial Clusters: {self.n_clusters}")
         print(f"Calculate weights for all samples...")
         self.w = calculate_weights(self.samples, self.K_s, self.a)
-        self.aff_table = self.aff_initialize()
+        # with tf.Session() as sess:
+        #     sess.run(tf.global_variables_initializer())
+        #     aff_table = self.aff_initialize_GPU()
+        #     self.aff_table = sess.run(aff_table)
+        self.aff_table = self.aff_initialize_CPU()
         self.K = self.aff_knn()
         print(f"Cluster Initialization Completed!")
 
     # Initialize Affinity Table
     @ExecutionTime.execution_time
-    def aff_initialize(self):
+    def aff_initialize_GPU(self):
         """Initialize the affintiy table and make the K^c-nearest cluster set
 
       Input
@@ -56,14 +62,42 @@ class Clusters:
       ______
       aff_table : [n_clusters, n_clusters]
       """
-        n_clusters = np.unique(self.labels).shape[0]
-        aff_table = np.zeros((n_clusters, n_clusters))
+        with tf.device('/GPU:0'):
+            aff_table = np.zeros((self.n_clusters, self.n_clusters))
+            print(f"Calculate affinity tables for all samples...")
+
+            print(f"Calculation Numbers: {self.n_clusters * (self.n_clusters + 1) / 2}")
+            # Make affinity table
+            for i in range(self.n_clusters):
+                for j in range(i + 1, self.n_clusters):  # A[i, j] = A[j, i]
+                    aff_table[i, j] = self.aff_between_two_clusters_GPU(i, j).eval()
+                    aff_table[j, i] = aff_table[i, j]
+
+        print(f"Affinity Table Initialization Completed!")
+        return aff_table
+
+    @ExecutionTime.execution_time
+    def aff_initialize_CPU(self):
+        """Initialize the affintiy table and make the K^c-nearest cluster set
+
+      Input
+      ______
+      w : Weight matrix of samples
+      labels : cluster index of samples
+
+      Output
+      ______
+      aff_table : [n_clusters, n_clusters]
+    """
+
+        aff_table = np.zeros((self.n_clusters, self.n_clusters))
         print(f"Calculate affinity tables for all samples...")
 
+        print(f"Calculation Numbers: {self.n_clusters**2/2}")
         # Make affinity table
-        for i in range(n_clusters):
-            for j in range(i + 1, n_clusters):  # A[i, j] = A[j, i]
-                aff_table[i, j] = self.aff_between_two_clusters(i, j)
+        for i in range(self.n_clusters):
+            for j in range(i + 1, self.n_clusters):  # A[i, j] = A[j, i]
+                aff_table[i, j] = self.aff_between_two_clusters_CPU(i, j)
                 aff_table[j, i] = aff_table[i, j]  # copy values for optimization
 
         print(f"Affinity Table Initialization Completed!")
@@ -72,9 +106,9 @@ class Clusters:
     def aff_knn(self):
         """ Make K^c-nearest cluster set
         """
-        n_clusters = self.aff_table.shape[0]
+
         K = np.argsort(-self.aff_table[0, :])[:self.K_c]  # argsort sorts values for descending order
-        for i in range(1, n_clusters):
+        for i in range(1, self.n_clusters):
             K_row = np.argsort(-self.aff_table[i, :])[:self.K_c]
             K = np.vstack([K, K_row])  # vstack consider 1-d array as (1,n) 2-d array
         print(f"KN-N Table Initialization Completed!")
@@ -117,7 +151,7 @@ class Clusters:
 
         return aff_max_ind[0][0], aff_max_ind[1][0]
 
-    def aff_between_two_clusters(self, c_a, c_b):
+    def aff_between_two_clusters_GPU(self, c_a, c_b):
         """ Calculate Affinity between two clusters
 
         :param c_a: index of cluster a
@@ -148,14 +182,41 @@ class Clusters:
         x_b_a = tf.constant(w_b_a, dtype=tf.float32)
 
         # Calculate Affinity between two clusters
-        with tf.device('/GPU:0'):
-            A = (1 / size_c_a ** 2 * tf.matmul(tf.matmul(tf.matmul(ones_a_T, x_a_b), x_b_a), ones_a) +
-                 1 / size_c_b ** 2 * tf.matmul(tf.matmul(tf.matmul(ones_b_T, x_b_a), x_a_b), ones_b))
+        A = (1 / size_c_a ** 2 * tf.matmul(tf.matmul(tf.matmul(ones_a_T, x_a_b), x_b_a), ones_a) +
+             1 / size_c_b ** 2 * tf.matmul(tf.matmul(tf.matmul(ones_b_T, x_b_a), x_a_b), ones_b))
 
-        with tf.Session() as sess:
-            y = sess.run(A)
+        return tf.squeeze(A)
 
-        return y.squeeze()
+    def aff_between_two_clusters_CPU(self, c_a, c_b):
+        """ Calculate Affinity between two clusters
+
+        :param c_a: index of cluster a
+        :param c_b: index of cluster b
+        :return: affinity between two clusters
+        """
+        # Find sample index which belongs to each cluster using list comprehension
+        ind_c_a = np.where(self.labels == c_a)[0]
+        ind_c_b = np.where(self.labels == c_b)[0]
+
+        # Make submatrix of w
+        w_a_b = self.w[ind_c_a][:, ind_c_b]
+        w_b_a = w_a_b.T
+
+        size_c_a = len(ind_c_a)
+        size_c_b = len(ind_c_b)
+        if size_c_a == 0:
+            print(f"Zero at c_a: {c_a}")
+        if size_c_b == 0:
+            print(f"Zero at c_a: {c_b}")
+
+        ones_a = np.ones((size_c_a, 1))
+        ones_b = np.ones((size_c_b, 1))
+
+        # Calculate Affinity between two clusters
+        A = (1 / size_c_a ** 2 * np.matmul(np.matmul(np.matmul(ones_a.T, w_a_b), w_b_a), ones_a) +
+             1 / size_c_b ** 2 * np.matmul(np.matmul(np.matmul(ones_b.T, w_b_a), w_a_b), ones_b))
+
+        return A.squeeze()
 
     def aff_between_two_samples(self, ind_a, ind_b):
         """
@@ -210,7 +271,7 @@ class Clusters:
 
         # Update affinity
         for c in list_to_update:
-            self.aff_table[c, c_a] = self.aff_between_two_clusters(c_a, c)
+            self.aff_table[c, c_a] = self.aff_between_two_clusters_CPU(c_a, c)
             self.aff_table[c_a, c] = self.aff_table[c, c_a]
 
         # Update K
@@ -249,10 +310,19 @@ class Clusters:
 
         # Calculate the loop number
         loops = int(np.unique(self.labels).shape[0] * eta)
+        print(f'Affinity cluster loop size: {loops}')
+        print(f'Affinity cluster loop start!')
         for i in range(loops):
             c_a, c_b = self.aff_find_maximum()
             # print(c_a, c_b)
             self.aff_update(c_a, c_b)
+
+    def is_finished(self):
+        """ Check number of cluster reaches number of desired clusters
+
+        :return: boolean
+        """
+        return self.n_clusters > self.n_c_star
 
 
 @ExecutionTime.execution_time
