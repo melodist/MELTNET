@@ -98,7 +98,7 @@ model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf
 # filepath = './model/checkpoints/{epoch:02d}-{val_loss:.4f}.hdf5'
 # checkpoint = tf.keras.callbacks.ModelCheckpoint(
 #     filepath, monitor='loss', verbose=1, save_weight_only=False)
-callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./model/logs')]
+# callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./model/logs')]
 
 # Uses 'dummy' embeddings + dummy gt labels. Will be removed as soon as loaded, to free memory
 dummy_gt_train = np.zeros((rand_samples, 151))
@@ -114,8 +114,7 @@ while cluster.is_finished():
         x=[patches_CT.numpy()[cluster.index], patches_PT.numpy()[cluster.index], cluster.labels.astype('float32')],
         y=dummy_gt_train,
         batch_size=batch_size_per_replica,
-        epochs=20,
-        callbacks=callbacks_list)
+        epochs=20)
 
     # Update Features
     features_updated = base_network.predict([patches_CT, patches_PT])
