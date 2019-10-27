@@ -15,6 +15,7 @@
 # Extract Patches from images
 import os
 import numpy as np
+import tensorflow as tf
 import cv2
 
 
@@ -50,3 +51,13 @@ def stackImages(path, ind_ct, ind_pt):
     print(f'img_pt.shape: {img_pt.shape}')
 
     return img_ct, img_pt
+
+
+def patch_extraction(img):
+    patches = tf.extract_image_patches(img, ksizes=[1, 17, 17, 1],
+                                       strides=[1, 5, 5, 1],
+                                       rates=[1, 1, 1, 1], padding='SAME')
+    patches = tf.reshape(patches, [-1, 17 * 17])
+    print(f"Patch Extraction Completed: {patches.shape}")
+
+    return patches
