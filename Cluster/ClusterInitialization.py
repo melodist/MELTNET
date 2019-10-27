@@ -15,6 +15,9 @@ class Clusters:
         self.samples = samples
         self.n_c_star = n_c_star
 
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
         if "K_s" in kwargs:
             self.K_s = kwargs["K_s"]
         else:
