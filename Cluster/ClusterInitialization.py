@@ -310,8 +310,13 @@ class Clusters:
 
         # Calculate the loop number
         loops = int(np.unique(self.labels).shape[0] * eta)
-        print(f'Affinity cluster loop size: {loops}')
-        print(f'Affinity cluster loop start!')
+        if self.n_clusters - loops < self.n_c_star:
+            loops = self.n_clusters - self.n_c_star
+            print(f'Final Affinity cluster loop size: {loops}')
+            print(f'Final Affinity cluster loop start!')
+        else:
+            print(f'Affinity cluster loop size: {loops}')
+            print(f'Affinity cluster loop start!')
         for i in range(loops):
             c_a, c_b = self.aff_find_maximum()
             # print(c_a, c_b)

@@ -57,18 +57,18 @@ K_a = 5
 n_c_star = 100
 rand_samples = 10000
 
-rand_ind = np.random.choice(features.shape[0], rand_samples)  # randomly choose rand_samples
-print(f'Choose {rand_samples} samples randomly')
-cluster = ClusterInitialization.Clusters(features[rand_ind], rand_ind, n_c_star,
-                                         K_s=K_s, K_a=K_a)
+# rand_ind = np.random.choice(features.shape[0], rand_samples)  # randomly choose rand_samples
+# print(f'Choose {rand_samples} samples randomly')
+# cluster = ClusterInitialization.Clusters(features[rand_ind], rand_ind, n_c_star,
+#                                          K_s=K_s, K_a=K_a)
+#
+# # Save cluster to binary file
+# with open('test_191027.pickle', 'wb') as f:
+#     pickle.dump(cluster, f)
 
-# Save cluster to binary file
-with open('test_191027.pickle', 'wb') as f:
-    pickle.dump(cluster, f)
-
-# # Load cluster to binary file
-# with open('test_191027.pickle', 'rb') as f:
-#     cluster = pickle.load(f)
+# Load cluster to binary file
+with open('test_191027.pickle', 'rb') as f:
+    cluster = pickle.load(f)
 
 # Initialize Network
 buffer_size = 10000
@@ -95,11 +95,10 @@ opt = tf.keras.optimizers.Adam(lr=0.0001)
 model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf,
                       optimizer=opt)
 
-filepath = './model/checkpoints/{epoch:02d}-{val_loss:.4f}.hdf5'
-checkpoint = tf.keras.callbacks.ModelCheckpoint(
-    filepath, monitor='val_loss', verbose=1, save_best_only=False, period=25)
-callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./model/logs'),
-                  checkpoint]
+# filepath = './model/checkpoints/{epoch:02d}-{val_loss:.4f}.hdf5'
+# checkpoint = tf.keras.callbacks.ModelCheckpoint(
+#     filepath, monitor='loss', verbose=1, save_weight_only=False)
+callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./model/logs')]
 
 # Uses 'dummy' embeddings + dummy gt labels. Will be removed as soon as loaded, to free memory
 dummy_gt_train = np.zeros((rand_samples, 151))
@@ -112,7 +111,7 @@ while cluster.is_finished():
 
     # Backward Pass
     H = model_triplet.fit(
-        x=[patches_CT.numpy()[rand_ind], patches_PT.numpy()[rand_ind], cluster.labels.astype('float32')],
+        x=[patches_CT.numpy()[cluster.index], patches_PT.numpy()[cluster.index], cluster.labels.astype('float32')],
         y=dummy_gt_train,
         batch_size=batch_size_per_replica,
         epochs=20,
