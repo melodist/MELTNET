@@ -36,13 +36,12 @@ path = './Example'
 
 strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
-
     img_CT, img_PT = PatchExtraction.stackImages(path, ind_CT, ind_PT)
     patches_CT = PatchExtraction.patch_extraction(img_CT)
     patches_PT = PatchExtraction.patch_extraction(img_PT)
 
     # Initialize Network
-    input_shape = (17*17)
+    input_shape = (17 * 17)
     embedding_size = 150
     base_network = NetworkKeras.create_base_network(input_shape, embedding_size)
     base_network.summary()
@@ -70,7 +69,13 @@ with strategy.scope():
         cluster = pickle.load(f)
 
     # Initialize Network
-    batch_size = 128
+    buffer_size = 10000
+    batch_size_per_replica = 128
+    batch_size = batch_size_per_replica * strategy.num_replicas_in_sync
+    dataset_CT = tf.data.Dataset.from_tensor_slices(patches_CT).shuffle(buffer_size).batch(batch_size)
+    dataset_PT = tf.data.Dataset.from_tensor_slices(patches_PT).shuffle(buffer_size).batch(batch_size)
+    dataset_labels = tf.data.Dataset.from_tensor_slices(cluster.labels).shuffle(buffer_size).batch(batch_size)
+
     input_CT = tf.keras.Input(shape=(17 * 17), name='Input_CT')
     input_PT = tf.keras.Input(shape=(17 * 17), name='Input_PT')
     input_labels = tf.keras.Input(shape=(1,), name='Input_label')
@@ -90,7 +95,8 @@ with strategy.scope():
     filepath = '{epoch:02d}-{val_loss:.4f}.hdf5'
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
         filepath, monitor='val_loss', verbose=1, save_best_only=False, period=25)
-    callbacks_list = [checkpoint]
+    callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./logs'),
+                      checkpoint]
 
     # Uses 'dummy' embeddings + dummy gt labels. Will be removed as soon as loaded, to free memory
     dummy_gt_train = np.zeros((patches_CT.shape[0], 151))
@@ -102,7 +108,7 @@ with strategy.scope():
 
         # Backward Pass
         H = model_triplet.fit(
-            x=[patches_CT, patches_PT, cluster.labels],
+            x=[dataset_CT, dataset_PT, dataset_labels],
             y=dummy_gt_train,
             batch_size=batch_size,
             epochs=20,
