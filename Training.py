@@ -57,17 +57,18 @@ K_a = 5
 n_c_star = 100
 rand_samples = 10000
 
-# rand_ind = np.random.choice(features.shape[0], rand_samples)  # randomly choose rand_samples
-# print(f'Choose {rand_samples} samples randomly')
-# cluster = ClusterInitialization.Clusters(features[rand_ind], n_c_star, K_s=K_s, K_a=K_a)
-#
-# # Save cluster to binary file
-# with open('test_191027.pickle', 'wb') as f:
-#     pickle.dump(cluster, f)
+rand_ind = np.random.choice(features.shape[0], rand_samples)  # randomly choose rand_samples
+print(f'Choose {rand_samples} samples randomly')
+cluster = ClusterInitialization.Clusters(features[rand_ind], rand_ind, n_c_star,
+                                         K_s=K_s, K_a=K_a)
 
-# Load cluster to binary file
-with open('test_191027.pickle', 'rb') as f:
-    cluster = pickle.load(f)
+# Save cluster to binary file
+with open('test_191027.pickle', 'wb') as f:
+    pickle.dump(cluster, f)
+
+# # Load cluster to binary file
+# with open('test_191027.pickle', 'rb') as f:
+#     cluster = pickle.load(f)
 
 # Initialize Network
 buffer_size = 10000
@@ -111,7 +112,7 @@ while cluster.is_finished():
 
     # Backward Pass
     H = model_triplet.fit(
-        x=[patches_CT.numpy()[:rand_samples], patches_PT.numpy()[:rand_samples], cluster.labels.astype('float32')],
+        x=[patches_CT.numpy()[rand_ind], patches_PT.numpy()[rand_ind], cluster.labels.astype('float32')],
         y=dummy_gt_train,
         batch_size=batch_size_per_replica,
         epochs=20,

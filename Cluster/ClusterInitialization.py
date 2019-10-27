@@ -10,9 +10,10 @@ from scipy.spatial import distance
 
 
 class Clusters:
-    def __init__(self, samples, n_c_star, **kwargs):
+    def __init__(self, samples, index, n_c_star, **kwargs):
         print(f"Initialize Clusters...")
         self.samples = samples
+        self.index = index
         self.n_c_star = n_c_star
 
         for key, value in kwargs.items():
