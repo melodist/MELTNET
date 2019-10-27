@@ -92,15 +92,15 @@ with strategy.scope():
     model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf,
                           optimizer=opt)
 
-    filepath = '{epoch:02d}-{val_loss:.4f}.hdf5'
+    filepath = './model/checkpoints/{epoch:02d}-{val_loss:.4f}.hdf5'
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
         filepath, monitor='val_loss', verbose=1, save_best_only=False, period=25)
-    callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./logs'),
+    callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./model/logs'),
                       checkpoint]
 
     # Uses 'dummy' embeddings + dummy gt labels. Will be removed as soon as loaded, to free memory
     dummy_gt_train = np.zeros((patches_CT.shape[0], 151))
-
+    dataset_dummy = tf.data.Dataset.from_tensor_slices(dummy_gt_train).shuffle(buffer_size).batch(batch_size)
     # Merging Cluster Loop
     while cluster.is_finished():
         # Forward Pass
@@ -109,15 +109,14 @@ with strategy.scope():
         # Backward Pass
         H = model_triplet.fit(
             x=[dataset_CT, dataset_PT, dataset_labels],
-            y=dummy_gt_train,
-            batch_size=batch_size,
+            y=dataset_dummy,
             epochs=20,
             callbacks=callbacks_list)
 
         # Update Features
         features_updated = base_network.predict([patches_CT, patches_PT])
         cluster.update_cluster(features_updated)
-    model_triplet.save_weights('./checkpoints/')
+    base_network.save_weights('./model/')
 
 time_end = time.time()
 print(f'Training Finished! Elapsed Time: {time_end - time_start}')
