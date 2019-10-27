@@ -108,7 +108,7 @@ def fcn_dual(ct, pt):
     """Fully Connected Networks for Feature Extraction
     """
     # Merge two inputs into one vector
-    x = tf.concat([ct, pt])
+    x = tf.concat([ct, pt], 1)
 
     # FCN 1
     W_fc1 = weight_variable([3 * 3 * 50 * 2, 300])
@@ -129,7 +129,7 @@ ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
 path = ''
 
-img_CT, img_PT = Extraction.PatchExtraction.stackImages(path, ind_CT, ind_PT)
+img_CT, img_PT = PatchExtraction.stackImages(path, ind_CT, ind_PT)
 patches_CT = tf.image.extract_patches(img_CT, sizes=[1, 17, 17, 1],
                                       strides=[1, 5, 5, 1], padding='SAME')
 patches_PT = tf.image.extract_patches(img_PT, sizes=[1, 17, 17, 1],

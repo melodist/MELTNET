@@ -40,10 +40,6 @@ class Clusters:
         print(f"Number of Initial Clusters: {self.n_clusters}")
         print(f"Calculate weights for all samples...")
         self.w = calculate_weights(self.samples, self.K_s, self.a)
-        # with tf.Session() as sess:
-        #     sess.run(tf.global_variables_initializer())
-        #     aff_table = self.aff_initialize_GPU()
-        #     self.aff_table = sess.run(aff_table)
         self.aff_table = self.aff_initialize_CPU()
         self.K = self.aff_knn()
         print(f"Cluster Initialization Completed!")
@@ -62,16 +58,16 @@ class Clusters:
       ______
       aff_table : [n_clusters, n_clusters]
       """
-        with tf.device('/GPU:0'):
-            aff_table = np.zeros((self.n_clusters, self.n_clusters))
-            print(f"Calculate affinity tables for all samples...")
+        aff_table = np.zeros((self.n_clusters, self.n_clusters))
+        print(f"Calculate affinity tables for all samples...")
 
-            print(f"Calculation Numbers: {self.n_clusters * (self.n_clusters + 1) / 2}")
-            # Make affinity table
-            for i in range(self.n_clusters):
-                for j in range(i + 1, self.n_clusters):  # A[i, j] = A[j, i]
-                    aff_table[i, j] = self.aff_between_two_clusters_GPU(i, j).eval()
-                    aff_table[j, i] = aff_table[i, j]
+        print(f"Calculation Numbers: {self.n_clusters * (self.n_clusters + 1) / 2}")
+        # Make affinity table
+        for i in range(self.n_clusters):
+            for j in range(i + 1, self.n_clusters):  # A[i, j] = A[j, i]
+                aff_table[i, j] = self.aff_between_two_clusters_GPU(i, j)
+                aff_table[j, i] = aff_table[i, j]
+
 
         print(f"Affinity Table Initialization Completed!")
         return aff_table
@@ -93,7 +89,7 @@ class Clusters:
         aff_table = np.zeros((self.n_clusters, self.n_clusters))
         print(f"Calculate affinity tables for all samples...")
 
-        print(f"Calculation Numbers: {self.n_clusters**2/2}")
+        print(f"Calculation Numbers: {self.n_clusters * (self.n_clusters + 1) / 2}")
         # Make affinity table
         for i in range(self.n_clusters):
             for j in range(i + 1, self.n_clusters):  # A[i, j] = A[j, i]
