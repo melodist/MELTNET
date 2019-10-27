@@ -18,11 +18,12 @@ import tensorflow as tf
 import numpy as np
 import pickle
 import TripletLossAdaptedFromTF
-from Extraction import PatchExtraction
-from Cluster import ClusterInitialization
 import NetworkTensorflow
 import NetworkKeras
 import time
+from tensorflow.python.data.ops import dataset_ops
+from Extraction import PatchExtraction
+from Cluster import ClusterInitialization
 
 time_start = time.time()
 tf.enable_eager_execution()
@@ -72,9 +73,9 @@ with strategy.scope():
     buffer_size = 10000
     batch_size_per_replica = 128
     batch_size = batch_size_per_replica * strategy.num_replicas_in_sync
-    dataset_CT = tf.data.Dataset.from_tensor_slices(patches_CT).shuffle(buffer_size).batch(batch_size)
-    dataset_PT = tf.data.Dataset.from_tensor_slices(patches_PT).shuffle(buffer_size).batch(batch_size)
-    dataset_labels = tf.data.Dataset.from_tensor_slices(cluster.labels).shuffle(buffer_size).batch(batch_size)
+    dataset_CT = dataset_ops.DatasetV2.from_tensor_slices(patches_CT).shuffle(buffer_size).batch(batch_size)
+    dataset_PT = dataset_ops.DatasetV2.from_tensor_slices(patches_PT).shuffle(buffer_size).batch(batch_size)
+    dataset_labels = dataset_ops.DatasetV2.from_tensor_slices(cluster.labels).shuffle(buffer_size).batch(batch_size)
 
     input_CT = tf.keras.Input(shape=(17 * 17), name='Input_CT')
     input_PT = tf.keras.Input(shape=(17 * 17), name='Input_PT')
@@ -92,14 +93,16 @@ with strategy.scope():
     model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf,
                           optimizer=opt)
 
-    filepath = '{epoch:02d}-{val_loss:.4f}.hdf5'
+    filepath = './model/checkpoints/{epoch:02d}-{val_loss:.4f}.hdf5'
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
         filepath, monitor='val_loss', verbose=1, save_best_only=False, period=25)
-    callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./logs'),
+    callbacks_list = [tf.keras.callbacks.TensorBoard(log_dir='./model/logs'),
                       checkpoint]
 
     # Uses 'dummy' embeddings + dummy gt labels. Will be removed as soon as loaded, to free memory
     dummy_gt_train = np.zeros((patches_CT.shape[0], 151))
+    dataset_dummy = dataset_ops.DatasetV2.from_tensor_slices(dummy_gt_train).shuffle(buffer_size).batch(batch_size)
+    print(dataset_CT, dataset_PT, dataset_labels, dataset_dummy)
 
     # Merging Cluster Loop
     while cluster.is_finished():
@@ -109,15 +112,14 @@ with strategy.scope():
         # Backward Pass
         H = model_triplet.fit(
             x=[dataset_CT, dataset_PT, dataset_labels],
-            y=dummy_gt_train,
-            batch_size=batch_size,
+            y=dataset_dummy,
             epochs=20,
             callbacks=callbacks_list)
 
         # Update Features
         features_updated = base_network.predict([patches_CT, patches_PT])
         cluster.update_cluster(features_updated)
-    model_triplet.save_weights('./checkpoints/')
+    base_network.save_weights('./model/')
 
 time_end = time.time()
 print(f'Training Finished! Elapsed Time: {time_end - time_start}')
