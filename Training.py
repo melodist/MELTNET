@@ -57,17 +57,17 @@ with strategy.scope():
     n_c_star = 100
     rand_samples = 10000
 
-    rand_ind = np.random.choice(features.shape[0], rand_samples)  # randomly choose rand_samples
-    print(f'Choose {rand_samples} samples randomly')
-    cluster = ClusterInitialization.Clusters(features[rand_ind], n_c_star, K_s=K_s, K_a=K_a)
+    # rand_ind = np.random.choice(features.shape[0], rand_samples)  # randomly choose rand_samples
+    # print(f'Choose {rand_samples} samples randomly')
+    # cluster = ClusterInitialization.Clusters(features[rand_ind], n_c_star, K_s=K_s, K_a=K_a)
+    #
+    # # Save cluster to binary file
+    # with open('test_191027.pickle', 'wb') as f:
+    #     pickle.dump(cluster, f)
 
-    # Save cluster to binary file
-    with open('test_191027.pickle', 'wb') as f:
-        pickle.dump(cluster, f)
-
-    # # Load cluster to binary file
-    # with open('test_191027.pickle', 'rb') as f:
-    #     cluster = pickle.load(f)
+    # Load cluster to binary file
+    with open('test_191027.pickle', 'rb') as f:
+        cluster = pickle.load(f)
 
     # Initialize Network
     batch_size = 128

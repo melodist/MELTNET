@@ -276,11 +276,11 @@ class Clusters:
         # Update K
         self.K[c_a, :] = [x for x in np.argsort(-self.aff_table[c_a, :])[1:K_c + 1]]
         # print(f"K[c_a, :]: {K[c_a, :]}")
-        K = np.delete(self.K, c_b, 0)
-        K[K > c_b] = K[K > c_b] - 1
+        self.K = np.delete(self.K, c_b, 0)
+        self.K[self.K > c_b] = self.K[self.K > c_b] - 1
 
-        # print(f"K.shape: {K.shape}")
-        # print(f"labels.max: {labels.max()}\n")
+        # print(f"K.shape: {self.K.shape}")
+        # print(f"labels.max: {self.labels.max()}\n")
 
         # Remove c_b from table
         self.aff_table = np.delete(self.aff_table, c_b, 0)
