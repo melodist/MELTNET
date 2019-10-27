@@ -316,17 +316,38 @@ class Clusters:
             # print(c_a, c_b)
             self.aff_update(c_a, c_b)
 
+    def update_cluster(self, samples):
+        """ Update Cluster using trained network
+
+        :param samples: extracted features using trained network
+        :return:
+        1. Update samples
+        2. Update Weight Matrix
+        3. Update Affinity Matrix
+        """
+        # Update samples
+        self.samples = samples
+
+        self.n_clusters = np.unique(self.labels).shape[0]
+        print(f"Number of Initial Clusters: {self.n_clusters}")
+        print(f"Calculate weights for all samples...")
+        self.w = calculate_weights(self.samples, self.K_s, self.a)
+        self.aff_table = self.aff_initialize_CPU()
+        self.K = self.aff_knn()
+        print(f"Cluster Update Completed!")
+
     def is_finished(self):
         """ Check number of cluster reaches number of desired clusters
 
         :return: boolean
         """
+        print(f'n_clusters: {self.n_clusters}, n_c_star: {self.n_c_star}')
         return self.n_clusters > self.n_c_star
 
 
 @ExecutionTime.execution_time
 def cluster_initialize(samples, K_0):
-    """
+    """ Find K-neighbors of a cluster
 
     :param samples:
     :param K_0:
