@@ -18,7 +18,8 @@ def merging_patches(labels, num_y, num_x, stride):
     mesh = np.arange(num_y * num_x).reshape((num_y, num_x))
     for x in range(num_x):
         for y in range(num_y):
-            mask_image[stride * y:stride * y + 17, stride * x:stride * x + 17] += labels[mesh[y, x]] / stride
+            mask_image[stride * y:stride * y + 16, stride * x:stride * x + 16] += labels[mesh[y, x]]
+    mask_image = mask_image / mask_image.max() * 255
 
     return mask_image
 
@@ -48,7 +49,7 @@ patches_PT = PatchExtraction.patch_extraction(img_PT)
 
 # Extract Features
 print(f"Extract Features...")
-features = trained_model.predict([patches_CT, patches_PT])
+features = trained_model.predict([patches_CT, patches_PT], steps=1)
 
 # Using K-means
 print(f"K-Means Clustering...")
@@ -56,14 +57,15 @@ model_k_means = KMeans(n_clusters=2)
 model_k_means.fit(features)
 
 # Merging Patches
-num_x = 30
-num_y = 44
+num_x = 44
+num_y = 30
 stride = 5
-path_files = './Results'
+path_files = './Results/'
 label_predict = model_k_means.fit_predict(features)
-label_predict_batch = np.reshape((num_y * num_x, -1))
-print(label_predict_batch.shape)
-for i in range(label_predict_batch.shape[1]):
+label_predict_batch = label_predict.reshape((-1, num_y * num_x))
+
+for i in range(label_predict_batch.shape[0]):
     filename = 'CT' + str(i) + '.png'
     mask = merging_patches(label_predict_batch[i, :], num_y, num_x, stride)
     save_image(mask, filename, path_files)
+print(f"Done.")
