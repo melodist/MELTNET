@@ -19,7 +19,7 @@ import numpy as np
 import pickle
 import TripletLossAdaptedFromTF
 from Extraction import PatchExtraction
-from Cluster import ClusterInitialization, ClusterMerging
+from Cluster import ClusterInitialization
 import NetworkTensorflow
 import NetworkKeras
 import time
@@ -32,7 +32,7 @@ tf.enable_eager_execution()
 # Extract Patches
 ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
-path = ''
+path = './Example'
 
 strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
@@ -54,15 +54,20 @@ with strategy.scope():
     # Initialize clusters
     K_s = 20
     K_a = 5
-    K_c_star = 100
-    rand_samples = 1000
+    n_c_star = 100
+    rand_samples = 10000
 
-    rand_ind = np.random.choice(features.shape[0], rand_samples) # randomly choose rand_samples
-    cluster = ClusterInitialization.Clusters(features[rand_ind], K_c_star, K_s, K_a)
+    rand_ind = np.random.choice(features.shape[0], rand_samples)  # randomly choose rand_samples
+    print(f'Choose {rand_samples} samples randomly')
+    cluster = ClusterInitialization.Clusters(features[rand_ind], n_c_star, K_s=K_s, K_a=K_a)
 
     # Save cluster to binary file
     with open('test_191027.pickle', 'wb') as f:
         pickle.dump(cluster, f)
+
+    # # Load cluster to binary file
+    # with open('test_191027.pickle', 'rb') as f:
+    #     cluster = pickle.load(f)
 
     # Initialize Network
     batch_size = 128
