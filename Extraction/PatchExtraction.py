@@ -50,7 +50,7 @@ def stackImages(path, ind_ct, ind_pt):
     print(f'img_ct.shape: {img_ct.shape}')
     print(f'img_pt.shape: {img_pt.shape}')
 
-    return img_ct, img_pt
+    return img_ct/255, img_pt/255
 
 
 def patch_extraction(img):
