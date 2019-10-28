@@ -8,8 +8,10 @@ import tensorflow as tf
 import numpy as np
 import NetworkKeras
 import cv2
+import os
 from Extraction import PatchExtraction
 from sklearn.cluster import KMeans
+from datetime import datetime
 
 
 # Merging Patches
@@ -60,12 +62,19 @@ model_k_means.fit(features)
 num_x = 44
 num_y = 30
 stride = 5
-path_files = './Results/'
+
+now = datetime.now()
+path_files = f"./Results_{now}/"
+os.makedirs(path_files)
 label_predict = model_k_means.fit_predict(features)
 label_predict_batch = label_predict.reshape((-1, num_y * num_x))
 
 for i in range(label_predict_batch.shape[0]):
-    filename = 'CT' + str(i) + '.png'
+    filename = str(i) + '.png'
     mask = merging_patches(label_predict_batch[i, :], num_y, num_x, stride)
-    save_image(mask, filename, path_files)
+    save_image(mask, 'Results' + filename, path_files)
+    # save original image as reference
+    cv2.imwrite(path_files + 'CT' + filename, img_CT[i, :, :, 0]*255)
+    cv2.imwrite(path_files + 'PT' + filename, img_PT[i, :, :, 0]*255)
+
 print(f"Done.")
