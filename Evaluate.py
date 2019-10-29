@@ -9,28 +9,10 @@ import numpy as np
 import NetworkKeras
 import cv2
 import os
+import ImageProcessing
 from Extraction import PatchExtraction
 from sklearn.cluster import KMeans
 from datetime import datetime
-
-
-# Merging Patches
-def merging_patches(labels, num_y, num_x, stride):
-    mask_image = np.zeros((num_y * stride, num_x * stride))
-    mesh = np.arange(num_y * num_x).reshape((num_y, num_x))
-    for x in range(num_x):
-        for y in range(num_y):
-            mask_image[stride * y:stride * y + 16, stride * x:stride * x + 16] += labels[mesh[y, x]]
-    mask_image = mask_image / mask_image.max() * 255
-
-    return mask_image
-
-
-# Visualize Results
-def save_image(image, filename, path):
-    fileaddr = path + filename
-    cv2.imwrite(fileaddr, image)
-
 
 path_model = './model/'
 # Extract Features using trained network
@@ -55,7 +37,8 @@ features = trained_model.predict([patches_CT, patches_PT], steps=1)
 
 # Using K-means
 print(f"K-Means Clustering...")
-model_k_means = KMeans(n_clusters=2)
+num_labels = 10
+model_k_means = KMeans(n_clusters=num_labels)
 model_k_means.fit(features)
 
 # Merging Patches
@@ -64,17 +47,19 @@ num_y = 30
 stride = 5
 
 now = datetime.now()
-path_files = f"./Results_{now}/"
+path_files = f"./Results_{now.strftime('%Y%m%d_%H%M%S')}/"
 os.makedirs(path_files)
 label_predict = model_k_means.fit_predict(features)
 label_predict_batch = label_predict.reshape((-1, num_y * num_x))
 
 for i in range(label_predict_batch.shape[0]):
     filename = str(i) + '.png'
-    mask = merging_patches(label_predict_batch[i, :], num_y, num_x, stride)
-    save_image(mask, 'Results' + filename, path_files)
+    mask = ImageProcessing.merging_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
+    for j in range(num_labels):
+        ImageProcessing.save_image(mask[:, :, j], f'Results_{j}_' + filename, path_files)
     # save original image as reference
     cv2.imwrite(path_files + 'CT' + filename, img_CT[i, :, :, 0]*255)
     cv2.imwrite(path_files + 'PT' + filename, img_PT[i, :, :, 0]*255)
 
+ImageProcessing.ImageBlending(path_files)
 print(f"Done.")
