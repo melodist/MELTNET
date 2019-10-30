@@ -37,6 +37,8 @@ ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
 path = './Examples'
 patient_list = os.listdir(path)
+print(f'Number of patients: {len(patient_list)}')
+
 # strategy = tf.distribute.MirroredStrategy()
 # with strategy.scope():
 
@@ -44,7 +46,7 @@ patient_list = os.listdir(path)
 input_shape = (17 * 17)
 embedding_size = 150
 base_network = NetworkKeras.create_base_network(input_shape, embedding_size)
-base_network.summary()
+# base_network.summary()
 
 # Initialize Entire Network
 buffer_size = 10000
@@ -64,9 +66,9 @@ print(labels_plus_embeddings)
 model_triplet = tf.keras.Model(inputs=[input_CT, input_PT, input_labels],
                                outputs=labels_plus_embeddings)
 
-model_triplet.summary()
-tf.keras.utils.plot_model(model_triplet, to_file='model_triplet.png',
-                          show_shapes=True, show_layer_names=True)
+# model_triplet.summary()
+# tf.keras.utils.plot_model(model_triplet, to_file='model_triplet.png',
+#                           show_shapes=True, show_layer_names=True)
 opt = tf.keras.optimizers.Adam(lr=0.0001)
 model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf,
                       optimizer=opt)
@@ -93,7 +95,6 @@ for patient in patient_list:
     for i in range(loop_count):
         rand_ind = np.random.choice(features.shape[0], rand_samples)
         all_ind = np.arange(features.shape[0])
-        features = features[np.setdiff1d(all_ind, rand_ind)]
 
         print(f'Choose {rand_samples} samples randomly from {features.shape[0]} samples')
         cluster = ClusterInitialization.Clusters(features[rand_ind], rand_ind, n_c_star,
@@ -131,6 +132,9 @@ for patient in patient_list:
             # Update Features
             features_updated = base_network.predict([patches_CT, patches_PT])
             cluster.update_cluster(features_updated)
+
+        # Exclude used samples
+        features = features[np.setdiff1d(all_ind, rand_ind)]
 
 now = datetime.now()
 base_network.save_weights(f"./model/{now.strftime('%Y%m%d_%H%M%S')}")
