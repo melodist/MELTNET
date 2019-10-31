@@ -75,9 +75,9 @@ model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf
 
 # Make log file
 now = datetime.now()
-dir_model = f"./model/{now.strftime('%Y%m%d_%H%M%S')}"
+dir_model = f"./model/{now.strftime('%Y%m%d_%H%M%S')}/"
 os.makedirs(dir_model)
-f = open(f"{dir_model}/log.txt", "w")
+f = open(f"{dir_model}log.txt", "w")
 num_exp = 0
 
 for patient in patient_list:
@@ -151,8 +151,7 @@ for patient in patient_list:
         print(loop_msg)
 
 now = datetime.now()
-os.makedirs(f"./model/{now.strftime('%Y%m%d_%H%M%S')}")
-base_network.save_weights(f"./model/{now.strftime('%Y%m%d_%H%M%S')}")
+base_network.save_weights(dir_model)
 time_end = time.time()
 
 finish_msg = f'Training Finished! Elapsed Time: {time_end - time_start}'

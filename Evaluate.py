@@ -14,7 +14,7 @@ from Extraction import PatchExtraction
 from sklearn.cluster import KMeans
 from datetime import datetime
 
-path_model = './model/'
+path_model = './model/20191031_012618'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
@@ -40,6 +40,8 @@ for path_patient in patient_dir:
     addr_patient = f'{path}/{path_patient}/'
     path_files = path_result + path_patient + '/'
     os.makedirs(path_files)
+    os.makedirs(f'{path_files}CT/')
+    os.makedirs(f'{path_files}PT/')
 
     img_CT, img_PT = PatchExtraction.stackImages(addr_patient, ind_CT, ind_PT)
     patches_CT = PatchExtraction.patch_extraction(img_CT)
@@ -74,8 +76,8 @@ for path_patient in patient_dir:
         for j in range(num_labels):
             ImageProcessing.save_image(mask[:, :, j], f'Results_{j}_' + filename, path_files)
         # save original image as reference
-        cv2.imwrite(path_files + 'CT_' + filename, img_CT[i, :, :, 0]*255)
-        cv2.imwrite(path_files + 'PT_' + filename, img_PT[i, :, :, 0]*255)
+        cv2.imwrite(path_files + 'CT/' + filename, img_CT[i, :, :, 0]*255)
+        cv2.imwrite(path_files + 'PT/' + filename, img_PT[i, :, :, 0]*255)
 
-    # ImageProcessing.ImageBlending(path_files)
+    ImageProcessing.ImageBlending(path_files, 10)
 print(f"Done.")

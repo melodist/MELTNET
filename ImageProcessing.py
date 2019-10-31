@@ -23,20 +23,23 @@ def save_image(image, filename, path):
     cv2.imwrite(fileaddr, image)
 
 
-def ImageBlending(diraddr):
+def ImageBlending(diraddr, feature_num):
     # Read Images
-    file_list = os.listdir(diraddr)
-    file_list.sort()
+    ct_list = os.listdir(f'{diraddr}CT/')
+    ct_list.sort()
 
-    for i in range(int(len(file_list)/3)):
-        img_CT = cv2.imread(f'{diraddr}CT{i}.png')
-        img_mask = 255 - cv2.imread(f'{diraddr}Results{i}.png')
+    for i in ct_list:
+        for j in range(feature_num):
+            img_CT = cv2.imread(f'{diraddr}CT/{i}')
+            img_mask = 255 - cv2.imread(f'{diraddr}Results_{j}_{i}')
+            # Make mask violet
+            img_mask[:, :, 1:2] = 0
 
-        # Blend Images
-        dst = cv2.addWeighted(img_CT, 0.3, img_mask, 0.7, 0)
+            # Blend Images
+            dst = cv2.addWeighted(img_CT, 0.5, img_mask, 0.5, 0)
 
-        # Save Images
-        cv2.imwrite(f'{diraddr}Overlay_{i}.png', dst)
+            # Save Images
+            cv2.imwrite(f'{diraddr}Overlay_{j}_{i}.png', dst)
 
     # cv2.imshow('dst', dst)
     # cv2.waitKey(0)
