@@ -73,6 +73,13 @@ opt = tf.keras.optimizers.Adam(lr=0.0001)
 model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf,
                       optimizer=opt)
 
+# Make log file
+now = datetime.now()
+dir_model = f"./model/{now.strftime('%Y%m%d_%H%M%S')}"
+os.makedirs(dir_model)
+f = open(f"{dir_model}/log.txt", "w")
+num_exp = 0
+
 for patient in patient_list:
     # Make Patches
     img_CT, img_PT = PatchExtraction.stackImages(f'{path}/{patient}/', ind_CT, ind_PT)
@@ -93,6 +100,7 @@ for patient in patient_list:
 
     # randomly choose rand_samples
     for i in range(loop_count):
+        loop_start = time.time()
         rand_ind = np.random.choice(features.shape[0], rand_samples)
         all_ind = np.arange(features.shape[0])
 
@@ -135,8 +143,19 @@ for patient in patient_list:
 
         # Exclude used samples
         features = features[np.setdiff1d(all_ind, rand_ind)]
+        loop_end = time.time()
+
+        num_exp += 1
+        loop_msg = f'Loop #{num_exp} end. Elapsed Time: {loop_end - loop_start}\n'
+        f.write(loop_msg)
+        print(loop_msg)
 
 now = datetime.now()
+os.makedirs(f"./model/{now.strftime('%Y%m%d_%H%M%S')}")
 base_network.save_weights(f"./model/{now.strftime('%Y%m%d_%H%M%S')}")
 time_end = time.time()
-print(f'Training Finished! Elapsed Time: {time_end - time_start}')
+
+finish_msg = f'Training Finished! Elapsed Time: {time_end - time_start}'
+f.write(finish_msg)
+print(finish_msg)
+f.close()
