@@ -70,7 +70,6 @@ for path_patient in patient_dir:
         file_list = files
         file_list.sort()
 
-    print(f'Merging Patches...')
     for i, filename in enumerate(file_list):
         mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
         for j in range(num_labels):

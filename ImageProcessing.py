@@ -8,9 +8,10 @@ from sklearn.metrics import euclidean_distances
 def merging_patches(labels, num_labels, num_y, num_x, stride):
     mask_image = np.zeros((num_y * stride, num_x * stride, num_labels))
     mesh = np.arange(num_y * num_x).reshape((num_y, num_x))
+    print(f'Merging Patches...')
     for x in range(num_x):
         for y in range(num_y):
-            mask_image[stride * y:stride * y + 16, stride * x:stride * x + 16, labels[mesh[y, x]]] += 1
+            mask_image[stride * y:stride * y + 17, stride * x:stride * x + 17, labels[mesh[y, x]]] += 1
 
     for i in range(num_labels):
         mask_image[:, :, i] = mask_image[:, :, i] / mask_image[:, :, i].max() * 255
@@ -22,6 +23,7 @@ def merging_patches(labels, num_labels, num_y, num_x, stride):
 def project_patches(labels, num_labels, num_y, num_x, stride):
     mask_image = np.zeros((num_y * stride, num_x * stride, num_labels))
     mesh = np.arange(num_y * num_x).reshape((num_y, num_x))
+    print(f'Project Patches...')
 
     # Calculate centroids of patches
     x_center = np.array(range(2, 220, 5))
@@ -35,10 +37,10 @@ def project_patches(labels, num_labels, num_y, num_x, stride):
 
             # Reshape dists and find minimum index
             dists_reshape = dists.reshape(30, 44)
-            x_min = np.where(dists.min() == dists_reshape)[0][0]
-            y_min = np.where(dists.min() == dists_reshape)[1][0]
+            x_min = np.where(dists.min() == dists_reshape)[1][0]
+            y_min = np.where(dists.min() == dists_reshape)[0][0]
 
-            mask_image[y-2:y+2, x-2:x+2, labels[mesh[y_min, x_min]]] += 1
+            mask_image[y-2:y+3, x-2:x+3, labels[mesh[y_min, x_min]]] += 1
 
     for i in range(num_labels):
         mask_image[:, :, i] = mask_image[:, :, i] / mask_image[:, :, i].max() * 255
