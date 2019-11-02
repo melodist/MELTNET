@@ -62,12 +62,15 @@ def ImageBlending(diraddr, feature_num):
     for i in ct_list:
         for j in range(feature_num):
             img_CT = cv2.imread(f'{diraddr}CT/{i}')
-            img_mask = 255 - cv2.imread(f'{diraddr}Results_{j}_{i}')
+            img_result = 255 - cv2.imread(f'{diraddr}Results_{j}_{i}')
+            img_mask_plane = make_mask(img_CT, img_result)
+
             # Make mask violet
+            img_mask = np.repeat(img_mask_plane[:, :, np.newaxis], 3, axis=2)
             img_mask[:, :, 1:2] = 0
 
             # Blend Images
-            dst = cv2.addWeighted(img_CT, 0.5, img_mask, 0.5, 0)
+            dst = cv2.addWeighted(img_CT, 0.7, img_mask, 0.3, 0)
 
             # Save Images
             cv2.imwrite(f'{diraddr}Overlay_{j}_{i}.png', dst)
@@ -78,3 +81,32 @@ def ImageBlending(diraddr, feature_num):
 
     print('Image Blending Finished')
 
+
+def make_mask(img_CT, img_result):
+    gray = 255 - cv2.cvtColor(img_CT, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Finding Contour
+    images, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+    area_contours = []
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        area_contours.append(area)
+
+    area_contours = np.array(area_contours)
+    sort_contours = np.argsort(area_contours)
+
+    contour_lung = [contours[sort_contours[-1]], contours[sort_contours[-2]]]
+    mask = np.zeros(img_CT.shape, np.uint8)
+    cv2.drawContours(mask, contour_lung, -1, 255, thickness=cv2.FILLED)
+
+    # Bitwise calculation
+    img_result_plane = cv2.bitwise_not(img_result[:, :, 0])
+    mask_plane = mask[:, :, 0]
+    result2 = cv2.bitwise_and(img_result_plane, mask_plane)
+
+    kernel_close = np.ones((5, 5), np.uint8)
+    result3 = cv2.morphologyEx(255 - result2, cv2.MORPH_CLOSE, kernel_close)
+
+    return result3
