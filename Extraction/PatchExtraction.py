@@ -26,7 +26,7 @@ def stackImages(path, ind_ct, ind_pt):
     img_pt = np.zeros((1, ind_ct[0][1] - ind_ct[0][0],
                        ind_ct[1][1] - ind_ct[1][0]))
     for root, dirs, files in os.walk(path):
-        dir_list = [d for d in dirs]
+        files.sort()
         for file in files:
             filename = os.path.join(root, file)
             modality = filename.split(os.sep)[-2]
