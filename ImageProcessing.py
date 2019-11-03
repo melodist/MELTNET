@@ -23,7 +23,6 @@ def merging_patches(labels, num_labels, num_y, num_x, stride):
 def project_patches(labels, num_labels, num_y, num_x, stride):
     mask_image = np.zeros((num_y * stride, num_x * stride, num_labels))
     mesh = np.arange(num_y * num_x).reshape((num_y, num_x))
-    print(f'Project Patches...')
 
     # Calculate centroids of patches
     x_center = np.array(range(2, 220, 5))
@@ -62,7 +61,7 @@ def ImageBlending(diraddr, feature_num):
     for i in ct_list:
         for j in range(feature_num):
             img_CT = cv2.imread(f'{diraddr}CT/{i}')
-            img_result = 255 - cv2.imread(f'{diraddr}Results_{j}_{i}')
+            img_result = cv2.imread(f'{diraddr}Results_{j}_{i}')
             img_mask_plane = make_mask(img_CT, img_result)
 
             # Make mask violet
@@ -109,4 +108,4 @@ def make_mask(img_CT, img_result):
     kernel_close = np.ones((5, 5), np.uint8)
     result3 = cv2.morphologyEx(255 - result2, cv2.MORPH_CLOSE, kernel_close)
 
-    return result3
+    return 255 - result3

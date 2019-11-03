@@ -9,12 +9,14 @@ import numpy as np
 import NetworkKeras
 import cv2
 import os
+import time
 import ImageProcessing
 from Extraction import PatchExtraction
 from sklearn.cluster import KMeans
 from datetime import datetime
 
-path = './'
+time_start = time.time()
+path_model = './model/20191031_012618'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
@@ -70,6 +72,7 @@ for path_patient in patient_dir:
         file_list = files
         file_list.sort()
 
+    print(f'Project Patches...')
     for i, filename in enumerate(file_list):
         mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
         for j in range(num_labels):
@@ -79,4 +82,6 @@ for path_patient in patient_dir:
         cv2.imwrite(path_files + 'PT/' + filename, img_PT[i, :, :, 0]*255)
 
     ImageProcessing.ImageBlending(path_files, 10)
-print(f"Done.")
+
+time_end = time.time()
+print(f"Evaluation Finished! Elapsed time: {time_end - time_start}")
