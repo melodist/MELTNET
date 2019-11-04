@@ -35,7 +35,7 @@ tf.enable_eager_execution()
 # Extract Patches
 ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
-path = './Examples'
+path = './Training'
 patient_list = os.listdir(path)
 print(f'Number of patients: {len(patient_list)}')
 
@@ -108,9 +108,9 @@ for patient in patient_list:
         cluster = ClusterInitialization.Clusters(features[rand_ind], rand_ind, n_c_star,
                                                  K_s=K_s, K_a=K_a)
 
-        # Save cluster to binary file
-        with open('test_191030.pickle', 'wb') as f:
-            pickle.dump(cluster, f)
+        # # Save cluster to binary file
+        # with open('test_191030.pickle', 'wb') as f:
+        #     pickle.dump(cluster, f)
 
         # # Load cluster to binary file
         # with open('test_191027.pickle', 'rb') as f:
@@ -147,7 +147,7 @@ for patient in patient_list:
 
         num_exp += 1
         loop_msg = f'Loop #{num_exp} end. Elapsed Time: {loop_end - loop_start}\n'
-        f.write(loop_msg)
+        f.write(loop_msg.encode())
         print(loop_msg)
 
 now = datetime.now()
@@ -155,6 +155,6 @@ base_network.save_weights(dir_model)
 time_end = time.time()
 
 finish_msg = f'Training Finished! Elapsed Time: {time_end - time_start}'
-f.write(finish_msg)
+f.write(finish_msg.encode())
 print(finish_msg)
 f.close()
