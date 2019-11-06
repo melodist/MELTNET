@@ -147,7 +147,7 @@ for patient in patient_list:
 
         num_exp += 1
         loop_msg = f'Loop #{num_exp} end. Elapsed Time: {loop_end - loop_start}\n'
-        f.write(loop_msg.encode())
+        f.write(loop_msg)
         print(loop_msg)
 
 now = datetime.now()
@@ -155,6 +155,6 @@ base_network.save_weights(dir_model)
 time_end = time.time()
 
 finish_msg = f'Training Finished! Elapsed Time: {time_end - time_start}'
-f.write(finish_msg.encode())
+f.write(finish_msg)
 print(finish_msg)
 f.close()

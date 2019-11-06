@@ -16,7 +16,7 @@ from sklearn.cluster import KMeans
 from datetime import datetime
 
 time_start = time.time()
-path_model = './model/20191031_012618'
+path_model = './model/20191104_111218/'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
@@ -27,7 +27,7 @@ trained_model.load_weights(path_model)
 # Load Images
 ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
-path = './Examples'
+path = './Test'
 
 # Make Results Folder
 now = datetime.now()
@@ -72,9 +72,9 @@ for path_patient in patient_dir:
         file_list = files
         file_list.sort()
 
-    print(f'Project Patches...')
+    print(f'Merging Patches...')
     for i, filename in enumerate(file_list):
-        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
+        mask = ImageProcessing.merging_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
         for j in range(num_labels):
             ImageProcessing.save_image(mask[:, :, j], f'Results_{j}_' + filename, path_files)
         # save original image as reference
