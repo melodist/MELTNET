@@ -37,7 +37,7 @@ def stackImages(path, ind_ct, ind_pt):
                 img_win = img[ind_ct[0][0]:ind_ct[0][1], ind_ct[1][0]:ind_ct[1][1]]
                 img_ct = np.vstack([img_ct, img_win[np.newaxis, :, :]])
             else:
-                img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+                img = 255 - cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
                 # Apply windows
                 img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_CUBIC)
                 img_win = img[ind_ct[0][0]:ind_ct[0][1], ind_ct[1][0]:ind_ct[1][1]]

@@ -27,6 +27,16 @@ from tensorflow.python.data.ops import dataset_ops
 from Extraction import PatchExtraction
 from Cluster import ClusterInitialization
 
+
+def lr_schedule(epoch, lr):
+    """Helper function to retrieve the scheduled learning rate based on epoch.
+    inv: return base_lr * (1 + gamma * iter) ^ (- power)
+    """
+    gamma = 0.0001
+    power = 0.75
+    return lr * (1 + gamma * epoch) ** (-power)
+
+
 time_start = time.time()
 tf.enable_eager_execution()
 
@@ -69,7 +79,8 @@ model_triplet = tf.keras.Model(inputs=[input_CT, input_PT, input_labels],
 # model_triplet.summary()
 # tf.keras.utils.plot_model(model_triplet, to_file='model_triplet.png',
 #                           show_shapes=True, show_layer_names=True)
-opt = tf.keras.optimizers.Adam(lr=0.0001)
+callback = tf.keras.callbacks.LearningRateScheduler(lr_schedule)
+opt = tf.keras.optimizers.SGD(lr=0.0001, momentum=0.9, decay=5e-5)
 model_triplet.compile(loss=TripletLossAdaptedFromTF.triplet_loss_adapted_from_tf,
                       optimizer=opt)
 
@@ -135,7 +146,8 @@ for patient in patient_list:
                 x=[patches_CT.numpy()[cluster.index], patches_PT.numpy()[cluster.index], cluster.labels.astype('float32')],
                 y=dummy_gt_train,
                 batch_size=batch_size_per_replica,
-                epochs=20)
+                epochs=20,
+                callbacks=[callback])
 
             # Update Features
             features_updated = base_network.predict([patches_CT, patches_PT])
