@@ -50,14 +50,25 @@ def stackImages(path, ind_ct, ind_pt):
     print(f'img_ct.shape: {img_ct.shape}')
     print(f'img_pt.shape: {img_pt.shape}')
 
-    return img_ct/255, img_pt/255
+    return img_ct, img_pt
 
 
-def patch_extraction(img):
-    patches = tf.extract_image_patches(img, ksizes=[1, 17, 17, 1],
-                                       strides=[1, 5, 5, 1],
-                                       rates=[1, 1, 1, 1], padding='SAME')
-    patches = tf.reshape(patches, [-1, 17 * 17])
-    print(f"Patch Extraction Completed: {patches.shape}")
+def patch_extraction_thres(img_CT, img_PT, thres):
+    patches_all_CT = tf.extract_image_patches(img_CT, ksizes=[1, 17, 17, 1],
+                                              strides=[1, 5, 5, 1],
+                                              rates=[1, 1, 1, 1], padding='SAME')
+    patches_all_CT = tf.reshape(patches_all_CT, [-1, 17 * 17])
 
-    return patches
+    patches_all_PT = tf.extract_image_patches(img_PT, ksizes=[1, 17, 17, 1],
+                                              strides=[1, 5, 5, 1],
+                                              rates=[1, 1, 1, 1], padding='SAME')
+    patches_all_PT = tf.reshape(patches_all_PT, [-1, 17 * 17])
+
+    patches_center = patches_all_CT.numpy()[:, 144]
+    patches_thres = patches_center > thres
+    patches_CT = patches_all_CT[patches_thres]
+    patches_PT = patches_all_PT[patches_thres]
+
+    print(f"Patch Extraction Completed: {patches_CT.shape}")
+
+    return patches_CT, patches_PT
