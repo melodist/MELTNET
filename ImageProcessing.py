@@ -63,17 +63,20 @@ def ImageBlending(diraddr, feature_num):
             img_CT = cv2.imread(f'{diraddr}CT/{i}')
             img_PT = cv2.imread(f'{diraddr}PT/{i}')
             img_result = cv2.imread(f'{diraddr}Results_{j}_{i}')
-            img_mask_plane = make_mask(img_CT, img_PT, img_result)
-
             # Make mask violet
-            img_mask = np.repeat(img_mask_plane[:, :, np.newaxis], 3, axis=2)
-            img_mask[:, :, 1:2] = 0
+            img_result[:, :, 1:2] = 0
+
+            # img_mask_plane = make_mask(img_CT, img_PT, img_result)
+            #
+            # # Make mask violet
+            # img_mask = np.repeat(img_mask_plane[:, :, np.newaxis], 3, axis=2)
+            # img_mask[:, :, 1:2] = 0
 
             # Blend Images
-            dst = cv2.addWeighted(img_CT, 0.6, img_mask, 0.4, 0)
+            dst = cv2.addWeighted(img_CT, 0.6, img_result, 0.4, 0)
 
             # Save Images
-            cv2.imwrite(f'{diraddr}Overlay_{j}_{i}.png', dst)
+            cv2.imwrite(f'{diraddr}Overlay_{j}_{i}', dst)
 
     # cv2.imshow('dst', dst)
     # cv2.waitKey(0)
@@ -104,7 +107,7 @@ def make_mask(img_CT, img_PT, img_result):
     # Finding DMR using PT Images
     gray_PT = 255 - cv2.cvtColor(img_PT, cv2.COLOR_BGR2GRAY)
     ret_PT, thresh_PT = cv2.threshold(gray_PT, 200, 255, cv2.THRESH_BINARY)
-    closer = np.ones((3,3))
+    closer = np.ones((3, 3))
     thresh_PT_open = cv2.morphologyEx(thresh_PT, cv2.MORPH_OPEN, closer)
 
     # Make contours
@@ -149,7 +152,7 @@ def make_mask(img_CT, img_PT, img_result):
             cx = int(M['m10'] / M['m00'])
             cy = int(M['m01'] / M['m00'])
 
-            result = region_growing(img_CT_plane, (cy, cx))
+            result = regiongrow(img_CT_plane, 255*0.1, (cy, cx))
             result_total = cv2.bitwise_or(result_total, result)
 
     result_expanded = cv2.morphologyEx(result_total, cv2.MORPH_CLOSE, kernel)
@@ -215,3 +218,78 @@ def region_growing(img, seed):
         neighbor_points_list[index] = neighbor_points_list[-1]
 
     return segmented_img
+
+
+class Queue:
+    def __init__(self):
+        self.items = []
+
+    def isEmpty(self):
+        return self.items == []
+
+    def enque(self, item):
+        self.items.insert(0, item)
+
+    def deque(self):
+        return self.items.pop()
+
+    def qsize(self):
+        return len(self.items)
+
+    def isInside(self, item):
+        return item in self.items
+
+
+def regiongrow(image, epsilon, start_point):
+    Q = Queue()
+    s = []
+
+    x = start_point[0]
+    y = start_point[1]
+
+    Q.enque((x, y))
+
+    image = image.astype(np.int16)
+    mean_region = image[x, y]
+
+    while not Q.isEmpty():
+
+        t = Q.deque()
+        x = t[0]
+        y = t[1]
+
+        if x < image.shape[0] - 1 and \
+                abs(mean_region - image[x + 1, y]) <= epsilon:
+
+            if not Q.isInside((x + 1, y)) and not (x + 1, y) in s:
+                Q.enque((x + 1, y))
+
+        if x > 0 and \
+                abs(mean_region - image[x - 1, y]) <= epsilon:
+
+            if not Q.isInside((x - 1, y)) and not (x - 1, y) in s:
+                Q.enque((x - 1, y))
+
+        if y < (image.shape[1] - 1) and \
+                abs(mean_region - image[x, y + 1]) <= epsilon:
+            if not Q.isInside((x, y + 1)) and not (x, y + 1) in s:
+                Q.enque((x, y + 1))
+
+        if y > 0 and \
+                abs(mean_region - image[x, y - 1]) <= epsilon:
+
+            if not Q.isInside((x, y - 1)) and not (x, y - 1) in s:
+                Q.enque((x, y - 1))
+
+        if t not in s:
+            s.append(t)
+
+        points = np.asarray(s)
+        mean_region = image[points[:, 0], points[:, 1]].mean()
+
+    mask = np.zeros(image.shape, dtype=np.uint8)
+
+    for i in s:
+        mask[i[0], i[1]] = 255
+
+    return mask

@@ -15,8 +15,10 @@ from Extraction import PatchExtraction
 from sklearn.cluster import KMeans
 from datetime import datetime
 
+tf.enable_eager_execution()
+
 time_start = time.time()
-path_model = './model/20191104_111218/'
+path_model = './model/20191106_184830/'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
@@ -46,8 +48,7 @@ for path_patient in patient_dir:
     os.makedirs(f'{path_files}PT/')
 
     img_CT, img_PT = PatchExtraction.stackImages(addr_patient, ind_CT, ind_PT)
-    patches_CT = PatchExtraction.patch_extraction(img_CT)
-    patches_PT = PatchExtraction.patch_extraction(img_PT)
+    patches_CT, patches_PT = PatchExtraction.patch_extraction_thres(img_CT, img_PT, 0)
 
     # Extract Features
     print(f"Extract Features...")
@@ -55,7 +56,7 @@ for path_patient in patient_dir:
 
     # Using K-means
     print(f"K-Means Clustering...")
-    num_labels = 10
+    num_labels = 5
     model_k_means = KMeans(n_clusters=num_labels)
     model_k_means.fit(features)
 
@@ -74,14 +75,15 @@ for path_patient in patient_dir:
 
     print(f'Merging Patches...')
     for i, filename in enumerate(file_list):
-        mask = ImageProcessing.merging_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
+        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
         for j in range(num_labels):
             ImageProcessing.save_image(mask[:, :, j], f'Results_{j}_' + filename, path_files)
         # save original image as reference
-        cv2.imwrite(path_files + 'CT/' + filename, img_CT[i, :, :, 0]*255)
-        cv2.imwrite(path_files + 'PT/' + filename, img_PT[i, :, :, 0]*255)
+        cv2.imwrite(path_files + 'CT/' + filename, img_CT[i, :, :, 0])
+        cv2.imwrite(path_files + 'PT/' + filename, img_PT[i, :, :, 0])
 
-    ImageProcessing.ImageBlending(path_files, 10)
+    print(f'Blending Images...')
+    ImageProcessing.ImageBlending(path_files, num_labels)
 
 time_end = time.time()
 print(f"Evaluation Finished! Elapsed time: {time_end - time_start}")

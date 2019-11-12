@@ -24,6 +24,7 @@ import NetworkKeras
 import time
 from datetime import datetime
 from tensorflow.python.data.ops import dataset_ops
+from sklearn.preprocessing import StandardScaler
 from Extraction import PatchExtraction
 from Cluster import ClusterInitialization
 
@@ -55,7 +56,7 @@ print(f'Number of patients: {len(patient_list)}')
 # Initialize Base Network
 input_shape = (17 * 17)
 embedding_size = 150
-base_network = NetworkKeras.create_base_network(input_shape, embedding_size)
+base_network = NetworkKeras.create_base_network(input_shape, embedding_size, 0.5)
 # base_network.summary()
 
 # Initialize Entire Network
@@ -90,15 +91,21 @@ dir_model = f"./model/{now.strftime('%Y%m%d_%H%M%S')}/"
 os.makedirs(dir_model)
 f = open(f"{dir_model}log.txt", "w")
 num_exp = 0
+thres = 80
 
 for patient in patient_list:
     # Make Patches
     img_CT, img_PT = PatchExtraction.stackImages(f'{path}/{patient}/', ind_CT, ind_PT)
-    patches_CT = PatchExtraction.patch_extraction(img_CT)
-    patches_PT = PatchExtraction.patch_extraction(img_PT)
+    patches_CT, patches_PT = PatchExtraction.patch_extraction_thres(img_CT, img_PT, thres)
+
+    # Normalize the inputs
+    scaler_CT = StandardScaler()
+    scaled_CT = scaler_CT.fit_transform(patches_CT)
+    scaler_PT = StandardScaler()
+    scaled_PT = scaler_PT.fit_transform(patches_PT)
 
     # Extract Features using network
-    features = base_network.predict([patches_CT, patches_PT])
+    features = base_network.predict([scaled_CT, scaled_PT])
     print(f"Shape of extracted features: {features.shape}")
 
     # Initialize clusters
@@ -170,3 +177,7 @@ finish_msg = f'Training Finished! Elapsed Time: {time_end - time_start}'
 f.write(finish_msg)
 print(finish_msg)
 f.close()
+
+# Save cluster to binary file
+with open('history.pickle', 'wb') as f:
+    pickle.dump(H, f)

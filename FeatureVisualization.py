@@ -1,8 +1,11 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import cv2
 import NetworkKeras
 from Extraction import PatchExtraction
+
+tf.enable_eager_execution()
 
 
 def load_image(img_path, target_size):
@@ -14,13 +17,17 @@ def load_image(img_path, target_size):
 
 
 def show_patch(patches):
+    patches = patches.numpy()
     plt.figure(figsize=(16, 8))
     for i in range(32):
-        plt.subplot(4, 8, i+1)
+        patch = patches[i, :]
+        img = np.reshape(patch, (17, 17))
+        # cv2.imwrite(f'./patch_{i}.png', img*255)
 
-        # 눈금 제거. fignum은 같은 피켜에 연속 출력
+        plt.subplot(4, 8, i + 1)
+        # 눈금 제거. fignum은 같은 figure에 연속 출력
         plt.axis('off')
-        plt.matshow(patches[0, :, :, i], cmap='gray', fignum=0)
+        plt.matshow(img, cmap='gray', fignum=0, vmin=0, vmax=255)
     plt.tight_layout()
     plt.show()
 
@@ -65,15 +72,14 @@ def show_first_feature_map(loaded_model, img_path):
 
 
 path_model = './model/20191104_111218/'
-path_patient = ''
+path_patient = './Test/00237841 LEE TAE SOOK'
 path_result = ''
 
 ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
 
 img_CT, img_PT = PatchExtraction.stackImages(path_patient, ind_CT, ind_PT)
-patches_CT = PatchExtraction.patch_extraction(img_CT)
-patches_PT = PatchExtraction.patch_extraction(img_PT)
+patches_CT, patches_PT = PatchExtraction.patch_extraction_thres(img_CT, img_PT, 80)
 
 show_patch(patches_CT)
 
