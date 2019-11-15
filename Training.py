@@ -177,7 +177,3 @@ finish_msg = f'Training Finished! Elapsed Time: {time_end - time_start}'
 f.write(finish_msg)
 print(finish_msg)
 f.close()
-
-# Save cluster to binary file
-with open('history.pickle', 'wb') as f:
-    pickle.dump(H, f)

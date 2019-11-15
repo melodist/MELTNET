@@ -59,24 +59,29 @@ def ImageBlending(diraddr, feature_num):
     ct_list.sort()
 
     for i in ct_list:
-        for j in range(feature_num):
-            img_CT = cv2.imread(f'{diraddr}CT/{i}')
-            img_PT = cv2.imread(f'{diraddr}PT/{i}')
-            img_result = cv2.imread(f'{diraddr}Results_{j}_{i}')
-            # Make mask violet
-            img_result[:, :, 1:2] = 0
+        img_CT = cv2.imread(f'{diraddr}CT/{i}')
+        img_PT = cv2.imread(f'{diraddr}PT/{i}')
 
-            # img_mask_plane = make_mask(img_CT, img_PT, img_result)
-            #
-            # # Make mask violet
-            # img_mask = np.repeat(img_mask_plane[:, :, np.newaxis], 3, axis=2)
-            # img_mask[:, :, 1:2] = 0
+        # Make mask
+        img_mask_plane = make_mask(img_CT, img_PT)
+        cv2.imwrite(f'{diraddr}Mask_{i}', img_mask_plane)
+
+        for j in range(feature_num):
+            img_result = cv2.imread(f'{diraddr}Features/Features_{j}_{i}')
+
+            # Bitwise calculation
+            img_result_plane = img_result[:, :, 0]
+            img_overlay_plane = cv2.bitwise_and(img_result_plane, img_mask_plane)
+
+            # Make overlay violet
+            img_overlay = np.repeat(img_overlay_plane[:, :, np.newaxis], 3, axis=2)
+            img_overlay[:, :, 1:2] = 0
 
             # Blend Images
-            dst = cv2.addWeighted(img_CT, 0.6, img_result, 0.4, 0)
+            dst = cv2.addWeighted(img_CT, 0.6, img_overlay, 0.4, 0)
 
             # Save Images
-            cv2.imwrite(f'{diraddr}Overlay_{j}_{i}', dst)
+            cv2.imwrite(f'{diraddr}/Overlay/Overlay_{j}_{i}', dst)
 
     # cv2.imshow('dst', dst)
     # cv2.waitKey(0)
@@ -85,7 +90,7 @@ def ImageBlending(diraddr, feature_num):
     print('Image Blending Finished')
 
 
-def make_mask(img_CT, img_PT, img_result):
+def make_mask(img_CT, img_PT):
     gray = 255 - cv2.cvtColor(img_CT, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
@@ -105,10 +110,10 @@ def make_mask(img_CT, img_PT, img_result):
     cv2.drawContours(mask, contour_lung, -1, 255, thickness=cv2.FILLED)
 
     # Finding DMR using PT Images
-    gray_PT = 255 - cv2.cvtColor(img_PT, cv2.COLOR_BGR2GRAY)
+    gray_PT = cv2.cvtColor(img_PT, cv2.COLOR_BGR2GRAY)
     ret_PT, thresh_PT = cv2.threshold(gray_PT, 200, 255, cv2.THRESH_BINARY)
-    closer = np.ones((3, 3))
-    thresh_PT_open = cv2.morphologyEx(thresh_PT, cv2.MORPH_OPEN, closer)
+    opener = np.ones((5, 5))
+    thresh_PT_open = cv2.morphologyEx(thresh_PT, cv2.MORPH_OPEN, opener)
 
     # Make contours
     _, contours_PT, _ = cv2.findContours(thresh_PT_open, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -121,6 +126,7 @@ def make_mask(img_CT, img_PT, img_result):
     img_CT_plane = img_CT[:, :, 0]
 
     # Compensate the lung region
+    print(f'contours number: {len(contours_PT)}')
     for i in range(len(contours_PT)):
 
         # Draw mask for a contour
@@ -152,16 +158,12 @@ def make_mask(img_CT, img_PT, img_result):
             cx = int(M['m10'] / M['m00'])
             cy = int(M['m01'] / M['m00'])
 
-            result = regiongrow(img_CT_plane, 255*0.1, (cy, cx))
+            result = regiongrow(img_CT_plane, 255 * 0.1, (cy, cx))
             result_total = cv2.bitwise_or(result_total, result)
 
     result_expanded = cv2.morphologyEx(result_total, cv2.MORPH_CLOSE, kernel)
 
-    # Bitwise calculation
-    img_result_plane = img_result[:, :, 0]
-    result2 = cv2.bitwise_and(img_result_plane, result_expanded)
-
-    return result2
+    return result_expanded
 
 
 def region_growing(img, seed):
