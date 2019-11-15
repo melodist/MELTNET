@@ -18,12 +18,12 @@ from datetime import datetime
 tf.enable_eager_execution()
 
 time_start = time.time()
-path_model = './model/20191106_184830/'
+path_model = './model/20191112_125052/'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
 embedding_size = 150
-trained_model = NetworkKeras.create_base_network(input_shape, embedding_size)
+trained_model = NetworkKeras.create_base_network(input_shape, embedding_size, 0.5)
 trained_model.load_weights(path_model)
 
 # Load Images
@@ -46,6 +46,8 @@ for path_patient in patient_dir:
     os.makedirs(path_files)
     os.makedirs(f'{path_files}CT/')
     os.makedirs(f'{path_files}PT/')
+    os.makedirs(f'{path_files}Overlay/')
+    os.makedirs(f'{path_files}Features/')
 
     img_CT, img_PT = PatchExtraction.stackImages(addr_patient, ind_CT, ind_PT)
     patches_CT, patches_PT = PatchExtraction.patch_extraction_thres(img_CT, img_PT, 0)
@@ -57,7 +59,7 @@ for path_patient in patient_dir:
     # Using K-means
     print(f"K-Means Clustering...")
     num_labels = 5
-    model_k_means = KMeans(n_clusters=num_labels)
+    model_k_means = KMeans(n_clusters=num_labels, random_state=0)
     model_k_means.fit(features)
 
     # Merging Patches
@@ -77,13 +79,13 @@ for path_patient in patient_dir:
     for i, filename in enumerate(file_list):
         mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
         for j in range(num_labels):
-            ImageProcessing.save_image(mask[:, :, j], f'Results_{j}_' + filename, path_files)
+            ImageProcessing.save_image(mask[:, :, j], f'./Features/Features_{j}_' + filename, path_files)
         # save original image as reference
         cv2.imwrite(path_files + 'CT/' + filename, img_CT[i, :, :, 0])
         cv2.imwrite(path_files + 'PT/' + filename, img_PT[i, :, :, 0])
 
-    print(f'Blending Images...')
-    ImageProcessing.ImageBlending(path_files, num_labels)
+    # print(f'Blending Images...')
+    # ImageProcessing.ImageBlending(path_files, num_labels)
 
 time_end = time.time()
 print(f"Evaluation Finished! Elapsed time: {time_end - time_start}")
