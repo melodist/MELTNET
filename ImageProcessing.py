@@ -20,26 +20,31 @@ def merging_patches(labels, num_labels, num_y, num_x, stride):
 
 
 # Project Patches
-def project_patches(labels, num_labels, num_y, num_x, stride):
+def project_patches(labels, num_labels, num_y, num_x, stride, s_size):
     mask_image = np.zeros((num_y * stride, num_x * stride, num_labels))
     mesh = np.arange(num_y * num_x).reshape((num_y, num_x))
+    s_half = int(s_size / 2)
+
+    # Calculate centroids of subpatches
+    xs_center = np.array(range(s_half, num_x * stride, s_size))
+    ys_center = np.array(range(s_half, num_y * stride, s_size))
 
     # Calculate centroids of patches
-    x_center = np.array(range(2, 220, 5))
-    y_center = np.array(range(2, 150, 5))
+    x_center = np.array(range(2, num_x * stride, stride))
+    y_center = np.array(range(2, num_y * stride, stride))
     X, Y = np.meshgrid(x_center, y_center)
     centers = np.array([list(zip(x, y)) for x, y in zip(X, Y)])
 
-    for x in x_center:
-        for y in y_center:
-            dists = euclidean_distances([[x, y]], centers.reshape(30 * 44, 2))
+    for x in xs_center:
+        for y in ys_center:
+            dists = euclidean_distances([[x, y]], centers.reshape(num_y * num_x, 2))
 
             # Reshape dists and find minimum index
-            dists_reshape = dists.reshape(30, 44)
+            dists_reshape = dists.reshape(y_center.shape[0], x_center.shape[0])
             x_min = np.where(dists.min() == dists_reshape)[1][0]
             y_min = np.where(dists.min() == dists_reshape)[0][0]
 
-            mask_image[y - 2:y + 3, x - 2:x + 3, labels[mesh[y_min, x_min]]] += 1
+            mask_image[y - s_half:y + s_half + 1, x - s_half:x + s_half + 1, labels[mesh[y_min, x_min]]] += 1
 
     for i in range(num_labels):
         mask_image[:, :, i] = mask_image[:, :, i] / mask_image[:, :, i].max() * 255

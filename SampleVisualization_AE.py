@@ -21,7 +21,7 @@ from datetime import datetime
 tf.enable_eager_execution()
 
 time_start = time.time()
-path_model = './model/20191126_183408/'
+path_model = './model/AE/'
 
 # Extract Features using trained network
 # Load model

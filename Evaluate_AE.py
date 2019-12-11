@@ -18,18 +18,18 @@ from datetime import datetime
 tf.enable_eager_execution()
 
 time_start = time.time()
-path_model = './model/20191126_183408/'
+path_model = './model/AE_5patients/'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
 embedding_size = 150
 
 trained_model_CT = NetworkKeras.create_autoencoder(input_shape)
-trained_model_CT.load_weights(path_model + 'CT')
+trained_model_CT.load_weights(path_model + 'CT/')
 trained_model_CT.summary()
 
 trained_model_PT = NetworkKeras.create_autoencoder(input_shape)
-trained_model_PT.load_weights(path_model + 'PT')
+trained_model_PT.load_weights(path_model + 'PT/')
 trained_model_PT.summary()
 
 # Make feature extraction model
@@ -103,4 +103,4 @@ for path_patient in patient_dir:
     # ImageProcessing.ImageBlending(path_files, num_labels)
 
 time_end = time.time()
-print(f"Evaluation Finished! Elapsed time: {time_end - time_start}")
+print(f"Evaluation Finished! Elapsed time: {time_end - time_start:.2f}")

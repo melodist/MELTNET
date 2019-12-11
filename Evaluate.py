@@ -18,7 +18,7 @@ from datetime import datetime
 tf.enable_eager_execution()
 
 time_start = time.time()
-path_model = './model/20191112_125052/'
+path_model = './model/JULE/'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
@@ -77,7 +77,7 @@ for path_patient in patient_dir:
 
     print(f'Merging Patches...')
     for i, filename in enumerate(file_list):
-        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
+        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride, 3)
         for j in range(num_labels):
             ImageProcessing.save_image(mask[:, :, j], f'./Features/Features_{j}_' + filename, path_files)
         # save original image as reference
@@ -88,4 +88,4 @@ for path_patient in patient_dir:
     # ImageProcessing.ImageBlending(path_files, num_labels)
 
 time_end = time.time()
-print(f"Evaluation Finished! Elapsed time: {time_end - time_start}")
+print(f"Evaluation Finished! Elapsed time: {time_end - time_start:.2f}")
