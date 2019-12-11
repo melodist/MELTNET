@@ -9,5 +9,5 @@ Unsupervised Segmentation based on triplet loss
 191101 : Added Patch Projection instead of merging patches  
 191101 : Bug Fixed: Indexing for projection and merging  
 191112 : Using Isolated model  
-191129 : Sample Visualization, Autoencoder
+191129 : Sample Visualization, Autoencoder  
 191211 : Adjust subpatch size
