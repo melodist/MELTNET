@@ -77,7 +77,7 @@ for path_patient in patient_dir:
 
     print(f'Merging Patches...')
     for i, filename in enumerate(file_list):
-        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride, 3)
+        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride, 5)
         for j in range(num_labels):
             ImageProcessing.save_image(mask[:, :, j], f'./Features/Features_{j}_' + filename, path_files)
         # save original image as reference

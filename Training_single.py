@@ -1,18 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Feature Extraction Network
-# Conv 50@5x5: Conv -> BN -> ReLU
-# Max Pooling 2x2
-# Conv 50@5x5
-# Max Pooling 2x2
-# FCN 1350
-# FCN 160
-#
-# Patch_CT : 17x17 stride 5
-# Patch_PT : 17x17 stride 5
-# 113 subjects
-
+# JULE using CT image only
 
 import tensorflow as tf
 import numpy as np

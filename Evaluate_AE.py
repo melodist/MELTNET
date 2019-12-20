@@ -18,7 +18,7 @@ from datetime import datetime
 tf.enable_eager_execution()
 
 time_start = time.time()
-path_model = './model/AE_5patients/'
+path_model = './model/AE_40patients/'
 # Extract Features using trained network
 # Load model
 input_shape = (17 * 17)
@@ -92,7 +92,7 @@ for path_patient in patient_dir:
 
     print(f'Merging Patches...')
     for i, filename in enumerate(file_list):
-        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride)
+        mask = ImageProcessing.project_patches(label_predict_batch[i, :], num_labels, num_y, num_x, stride, 5)
         for j in range(num_labels):
             ImageProcessing.save_image(mask[:, :, j], f'./Features/Features_{j}_' + filename, path_files)
         # save original image as reference
