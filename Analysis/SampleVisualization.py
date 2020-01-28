@@ -32,7 +32,7 @@ trained_model.load_weights(path_model)
 # Load Images
 ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
-path = './Test'
+path = '../Test'
 
 # Make Results Folder
 now = datetime.now()
