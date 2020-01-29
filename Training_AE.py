@@ -1,23 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# # Feature Extraction Network  
-# Conv 50@5x5: Conv -> BN -> ReLU  
-# Max Pooling 2x2  
-# Conv 50@5x5  
-# Max Pooling 2x2  
-# FCN 450
-# FCN 150
-# 
-# Patch_CT : 17x17 stride 5  
-# Patch_PT : 17x17 stride 5  
-# 113 subjects  
-
-
+""" Training Autoencoder
+    Make convolution autoencoder for comparison
+"""
 import tensorflow as tf
-import numpy as np
 import os
-import NetworkKeras
+from Network import NetworkKeras
 import time
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
@@ -38,10 +26,16 @@ tf.enable_eager_execution()
 
 # Training Networks
 
+# FIXME : Parameters for training
+path = './Training'
+thres = 80
+epochs = 30
+batch_size = 128
+
 # Extract Patches
 ind_CT = [[230, 380], [150, 370]]
 ind_PT = [[230, 380], [150, 370]]
-path = './Training'
+
 patient_list = os.listdir(path)
 print(f'Number of patients: {len(patient_list)}')
 
@@ -50,10 +44,6 @@ input_shape = (17 * 17)
 embedding_size = 150
 AE_CT = NetworkKeras.create_autoencoder(input_shape)
 AE_PT = NetworkKeras.create_autoencoder(input_shape)
-
-# Initialize Entire Network
-buffer_size = 10000
-batch_size_per_replica = 128
 
 input_CT = tf.keras.Input(shape=(17 * 17), name='Input_CT')
 input_PT = tf.keras.Input(shape=(17 * 17), name='Input_PT')
@@ -73,9 +63,8 @@ os.makedirs(f'{dir_model}/CT')
 os.makedirs(f'{dir_model}/PT')
 f = open(f"{dir_model}log.txt", "w")
 
+# Initialize parameters
 num_exp = 0
-thres = 80
-epochs = 30
 
 for patient in patient_list:
     loop_start = time.time()
@@ -92,10 +81,10 @@ for patient in patient_list:
 
     # Training
     AE_CT.fit(scaled_CT, scaled_CT,
-              epochs=epochs, batch_size=batch_size_per_replica,
+              epochs=epochs, batch_size=batch_size,
               verbose=1, shuffle=True)
     AE_PT.fit(scaled_PT, scaled_PT,
-              epochs=epochs, batch_size=batch_size_per_replica,
+              epochs=epochs, batch_size=batch_size,
               verbose=1, shuffle=True)
 
     loop_end = time.time()
