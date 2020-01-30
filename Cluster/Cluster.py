@@ -1,7 +1,3 @@
-# Cluster Initialization
-"""Initialize clusters and label
-
-"""
 import numpy as np
 import tensorflow as tf
 import ExecutionTime
@@ -10,6 +6,10 @@ from scipy.spatial import distance
 
 
 class Clusters:
+    """
+    Class for cluster calculation
+    """
+
     def __init__(self, samples, index, n_c_star, **kwargs):
         print(f"Initialize Clusters...")
         self.samples = samples
@@ -53,15 +53,15 @@ class Clusters:
     def aff_initialize_GPU(self):
         """Initialize the affintiy table and make the K^c-nearest cluster set
 
-      Input
-      ______
-      w : Weight matrix of samples
-      labels : cluster index of samples
+        Input
+        ______
+        w : Weight matrix of samples
+        labels : cluster index of samples
 
-      Output
-      ______
-      aff_table : [n_clusters, n_clusters]
-      """
+        Output
+        ______
+        aff_table : [n_clusters, n_clusters]
+        """
         aff_table = np.zeros((self.n_clusters, self.n_clusters))
         print(f"Calculate affinity tables for all samples...")
 
@@ -72,7 +72,6 @@ class Clusters:
                 aff_table[i, j] = self.aff_between_two_clusters_GPU(i, j)
                 aff_table[j, i] = aff_table[i, j]
 
-
         print(f"Affinity Table Initialization Completed!")
         return aff_table
 
@@ -80,15 +79,15 @@ class Clusters:
     def aff_initialize_CPU(self):
         """Initialize the affintiy table and make the K^c-nearest cluster set
 
-      Input
-      ______
-      w : Weight matrix of samples
-      labels : cluster index of samples
+        Input
+        ______
+        w : Weight matrix of samples
+        labels : cluster index of samples
 
-      Output
-      ______
-      aff_table : [n_clusters, n_clusters]
-    """
+        Output
+        ______
+        aff_table : [n_clusters, n_clusters]
+        """
 
         aff_table = np.zeros((self.n_clusters, self.n_clusters))
         print(f"Calculate affinity tables for all samples...")
@@ -105,6 +104,13 @@ class Clusters:
 
     def aff_knn(self):
         """ Make K^c-nearest cluster set
+
+        Input
+        ______
+
+        Output
+        ______
+        K : array of K^c-nearest cluster index
         """
 
         K = np.argsort(-self.aff_table[0, :])[:self.K_c]  # argsort sorts values for descending order
@@ -117,19 +123,19 @@ class Clusters:
     # Merge two clusters to new cluster
     def merge_two_clusters(self, c_a, c_b):
         """
-      Merge two clusters and update cluster labels.
-      label > c_b : label = label - 1
+        Merge two clusters and update cluster labels.
+        label > c_b : label = label - 1
 
-      Input
-      ______
-      c_a : small cluster number
-      c_a : large cluster number
-      labels : cluster labels
+        Input
+        ______
+        c_a : small cluster number
+        c_a : large cluster number
+        labels : cluster labels
 
-      Output
-      ______
-      labels : updated cluster labels
-      """
+        Output
+        ______
+        labels : updated cluster labels
+        """
         # Merge two clusters
         self.labels[self.labels == c_b] = c_a
         # Update the label
@@ -152,11 +158,16 @@ class Clusters:
         return aff_max_ind[0][0], aff_max_ind[1][0]
 
     def aff_between_two_clusters_GPU(self, c_a, c_b):
-        """ Calculate Affinity between two clusters
+        """ Calculate Affinity between two clusters using tensorflow
 
-        :param c_a: index of cluster a
-        :param c_b: index of cluster b
-        :return: affinity between two clusters
+        Input
+        ______
+        c_a: index of cluster a
+        c_b: index of cluster b
+
+        Output
+        ______
+        tf.squeeze(A) : affinity between two clusters
         """
         # Find sample index which belongs to each cluster using list comprehension
         ind_c_a = np.where(self.labels == c_a)[0]
@@ -188,11 +199,15 @@ class Clusters:
         return tf.squeeze(A)
 
     def aff_between_two_clusters_CPU(self, c_a, c_b):
-        """ Calculate Affinity between two clusters
+        """ Calculate Affinity between two clusters using CPU
+        Input
+        ______
+        c_a: index of cluster a
+        c_b: index of cluster b
 
-        :param c_a: index of cluster a
-        :param c_b: index of cluster b
-        :return: affinity between two clusters
+        Output
+        ______
+        A.squeeze() : affinity between two clusters
         """
         # Find sample index which belongs to each cluster using list comprehension
         ind_c_a = np.where(self.labels == c_a)[0]
@@ -219,11 +234,16 @@ class Clusters:
         return A.squeeze()
 
     def aff_between_two_samples(self, ind_a, ind_b):
-        """
+        """ Calculate affinity between two samples
 
-        :param ind_a: Index of sample a
-        :param ind_b: Index of sample b
-        :return: Affinity between two samples
+        Input
+        ______
+        ind_a : Index of sample a
+        ind_b : Index of sample b
+
+        Output
+        ______
+        A : Affinity between two samples
         """
         # Make submatrix of w
         w_a_b = self.w[ind_a][ind_b]
@@ -236,7 +256,7 @@ class Clusters:
 
     # Update Affinity table
     def aff_update(self, c_a, c_b):
-        """Update affinity table using AGDL
+        """ Update affinity table using AGDL
 
       Input
       ______
@@ -324,12 +344,16 @@ class Clusters:
 
     def update_cluster(self, samples):
         """ Update Cluster using trained network
-
-        :param samples: extracted features using trained network
-        :return:
         1. Update samples
         2. Update Weight Matrix
         3. Update Affinity Matrix
+
+        Input
+        ______
+        samples: extracted features using trained network
+
+        Output
+        ______
         """
         # Update samples
         self.samples = samples
@@ -344,8 +368,12 @@ class Clusters:
 
     def is_finished(self):
         """ Check number of cluster reaches number of desired clusters
+        Input
+        ______
 
-        :return: boolean
+        OUtput
+        ______
+        boolean : return true if number of clusters does not reaches desired number
         """
         print(f'n_clusters: {self.n_clusters}, n_c_star: {self.n_c_star}')
         return self.n_clusters > self.n_c_star
@@ -353,17 +381,21 @@ class Clusters:
 
 @ExecutionTime.execution_time
 def cluster_initialize(samples, K_0):
-    """ Find K-neighbors of a cluster
+    """ Find K-neighbors of each samples and make clusters.
+    Clusters will be expressed by labels of each samples in dataset.
 
-    :param samples:
-    :param K_0:
-    :return:
+    Input
+    ______
+    samples: Input dataset
+    K_0: Initial values
+
+    Output
+    labels : Labels of samples
     """
     # Finds the K-neighbors of a point
     clf = NearestNeighbors(n_neighbors=K_0)
     clf.fit(samples)
     _, cluster_init = clf.kneighbors()
-    # print(cluster_init)
 
     labels = np.full(samples.shape[0], -1)
     ind_cluster = 0
@@ -371,6 +403,7 @@ def cluster_initialize(samples, K_0):
     # Define the label using Depth-First Search
     for i in range(samples.shape[0]):
         if labels[i] == -1:
+            # Execute DFS for every samples not included in any cluster
             labels = dfs(labels, cluster_init, i, ind_cluster)
             ind_cluster += 1
 
@@ -378,6 +411,20 @@ def cluster_initialize(samples, K_0):
 
 
 def dfs(labels, graph, start, index):
+    """ Depth first search using stack
+        Give same label index for every node in a tree
+
+    Input
+    ______
+    labels: array for labels of each samples in cluster
+    graph: 2-D matrix for graph
+    start: initial point in a tree. DFS will search the tree includes this point
+    index: label index for nodes
+
+    Output
+    ______
+    labels : modified array which records the cluster label for the points in the tree
+    """
     visited = []
     stack = [start]
 
@@ -388,7 +435,6 @@ def dfs(labels, graph, start, index):
             labels[n] = index
             stack += set(graph[n]) - set(visited)
 
-    # print(f"visited: {visited}, i = {index}")
     return labels
 
 
