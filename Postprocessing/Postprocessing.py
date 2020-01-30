@@ -7,6 +7,7 @@
 
 import numpy as np
 import os
+import sys
 import glob
 import cv2
 import pandas as pd
@@ -210,3 +211,7 @@ def postprocessing_single(root_result):
 
             # Save Overlay Images
             cv2.imwrite(f'{addr_results}/Overlay/Overlay_{file_index}', dst)
+
+
+if __name__ == '__main__':
+    postprocessing(sys.argv[1])
