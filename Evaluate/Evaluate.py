@@ -10,7 +10,7 @@ import cv2
 import os
 import sys
 import time
-import ImageProcessing
+from Evaluate import ImageProcessing
 from Extraction import PatchExtraction
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
@@ -91,6 +91,7 @@ def test_model(path_model, path_image, ind_CT, ind_PT, num_labels=5):
         stride = 5
 
         label_predict = model_k_means.fit_predict(features)
+        # Reshape matrix for [num_patients, num_y * num_x]
         label_predict_batch = label_predict.reshape((-1, num_y * num_x))
 
         # Extract File Names
