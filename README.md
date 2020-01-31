@@ -44,7 +44,10 @@ Install scikit-image 0.16.2 by:
    $ pip install scikit-image
     ```
 
-### Process Overview  
+### Process Overview
+
+![12  ProcessOverview](https://user-images.githubusercontent.com/52024566/73510461-87bcd680-4425-11ea-8548-fa10056ba93a.png)
+
 1. Preprocessing
     * Extract whole slices from PET/CT DICOM 
         ```bash
@@ -90,6 +93,7 @@ Two approaches were committed to evaluate the performance of this project.
 ### Q&A
 
 ### Reference
-1. https://github.com/jwyang/JULE.torch
-2. https://github.com/AdrianUng/keras-triplet-loss-mnist
-3. 
+1. T. Moriya et al., “Unsupervised segmentation of 3D medical images based on clustering and deep representation learning,” 2018, p. 71.
+2. https://github.com/jwyang/JULE.torch
+3. https://github.com/AdrianUng/keras-triplet-loss-mnist
+ 
