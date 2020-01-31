@@ -8,6 +8,8 @@ The main idea for this is that better image representation gets better clusterin
 and better clustering results helps to get better image representation. 
 This model is based on unsupervised learning so it can use raw DICOM data from medical instruments. 
 
+![10  NoduleDetection](https://user-images.githubusercontent.com/52024566/73548729-9b4b5a00-4484-11ea-8b69-8c5410ac8b00.png)
+
 ### License
 This code is released under the MIT License.
 
