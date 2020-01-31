@@ -2,8 +2,14 @@
 Automatic Lung Nodule Detection based unsupervised learning using PET/CT images
 
 ### Overview
-Convolutional Neural Network for lung nodules detection using PET/CT  
-Unsupervised Segmentation based on weighted triplet loss
+This project is a tensorflow and Keras implementation, 
+which performs lung nodules detection based unsupervised learning using PET/CT images. 
+The main idea for this is that better image representation gets better clustering, 
+and better clustering results helps to get better image representation. 
+This model is based on unsupervised learning so it can use raw DICOM data from medical instruments. 
+
+### License
+This code is released under the MIT License.
 
 ### Package Dependencies
 1. Pydicom(https://pydicom.github.io/).  
@@ -85,13 +91,29 @@ Install scikit-image 0.16.2 by:
     ```bash
    $ python Calculate.py (path_result, path_ref)
     ```
+    You should make index.csv in your root directory for detection results.
+    It should have three columns, 'patient_name', 'feature_index', and 'offset'.  
+    * patient_name : Folder name for each patients  
+    * feature_index : Feature index for calculate confusion matrix  
+    * offset : Offset for detection image and ground truth
     
 ### Compared Approaches
 Two approaches were committed to evaluate the performance of this project.  
-1. Convolutional Autoencoder (CAE)
-2. Joint unsupervised learning with single modality (CT)
+1. Convolutional Autoencoder (CAE)  
+    CAE is widely used for image segmentation problem. 
+    You can see network structure reading README in Network folder.
+    Also You can test this model using such files in this project.
+    ``` text
+       Training_AE.py, Evaluate_AE.py
+    ``` 
+2. Joint unsupervised learning with single modality (CT)  
+    This model was executed to compare the performance difference between single modality and dual modality. 
+    You can test this model using such files in this project.
+    ``` text
+        Training_single.py, Evaluate_single.py
+    ```
 ### Q&A
-
+You are welcome to send message to (melt.ep00 at gmail.com) if you have any issue on this code.
 ### Reference
 1. T. Moriya et al., “Unsupervised segmentation of 3D medical images based on clustering and deep representation learning,” 2018, p. 71.
 2. https://github.com/jwyang/JULE.torch
