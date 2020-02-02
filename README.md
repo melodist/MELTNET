@@ -1,5 +1,4 @@
-### Project Title
-Automatic Lung Nodule Detection based unsupervised learning using PET/CT images
+## Automatic Lung Nodule Detection based unsupervised learning using PET/CT images
 
 ### Overview
 This project is a tensorflow and Keras implementation, 
