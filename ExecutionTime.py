@@ -1,5 +1,5 @@
-"""# Measure Execution time
-
+""" Measure Execution time
+    Use this function as a decorator Function
 """
 import time
 
