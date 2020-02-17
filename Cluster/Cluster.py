@@ -145,13 +145,13 @@ class Clusters:
     def aff_find_maximum(self):
         """ Find the set which has maximum affinity
 
-      Input
-      ______
+        Input
+        ______
 
-      Output
-      ______
-      c1, c2 : cluster label
-      """
+        Output
+        ______
+        c1, c2 : cluster label
+        """
         aff_max = np.max(self.aff_table)
         aff_max_ind = np.where(self.aff_table == aff_max)
 
@@ -258,24 +258,24 @@ class Clusters:
     def aff_update(self, c_a, c_b):
         """ Update affinity table using AGDL
 
-      Input
-      ______
-      w : Weight matrix of samples
-      labels_old : cluster index of samples
-      aff_table : table of affinities between clusters
-      K : K_c-nearest neighbor cluster sets
-      c_a, c_b : labels of merged clusters
+        Input
+        ______
+        w : Weight matrix of samples
+        labels_old : cluster index of samples
+        aff_table : table of affinities between clusters
+        K : K_c-nearest neighbor cluster sets
+        c_a, c_b : labels of merged clusters
 
-      Output
-      ______
-      aff_table : [n_clusters, n_clusters]
-      K : [n_clusters, K_c]
+        Output
+        ______
+        aff_table : [n_clusters, n_clusters]
+        K : [n_clusters, K_c]
 
 
-      1. Update affinity for the clusters who has c_a or c_b as neighbor
-      2. Update labels and K
-      3. Remove c_b from aff_table
-      """
+        1. Update affinity for the clusters who has c_a or c_b as neighbor
+        2. Update labels and K
+        3. Remove c_b from aff_table
+        """
         K_c = self.K.shape[1]
 
         # Update Labels
@@ -312,21 +312,21 @@ class Clusters:
     def aff_cluster_loop(self, eta=0.9):
         """ Loop for merging clusters
 
-      Input
-      ______
-      eta :
+        Input
+        ______
+        eta :
 
-      Output
-      ______
-      labels : [n_samples]
-      aff_table :
-      K
+        Output
+        ______
+        labels : [n_samples]
+        aff_table :
+        K
 
-      1. Calculate the loop number
-      L1-1. Find the clusters who has maximum affinity
-      L1-2. Merging the clusters and update the affinity table
-      L2. Update the CNN 20 times
-      """
+        1. Calculate the loop number
+        L1-1. Find the clusters who has maximum affinity
+        L1-2. Merging the clusters and update the affinity table
+        L2. Update the CNN 20 times
+        """
 
         # Calculate the loop number
         loops = int(np.unique(self.labels).shape[0] * eta)
